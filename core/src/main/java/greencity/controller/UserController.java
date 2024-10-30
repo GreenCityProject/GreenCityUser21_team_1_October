@@ -27,7 +27,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -451,11 +450,7 @@ public class UserController {
     @ApiPageable
     public ResponseEntity<PageableAdvancedDto<UserManagementDto>> findUserForManagementByPage(
         @ApiIgnore Pageable pageable) {
-        try {
-            return ResponseEntity.status(HttpStatus.OK).body(userService.findUserForManagementByPage(pageable));
-        } catch (PropertyReferenceException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+        return ResponseEntity.status(HttpStatus.OK).body(userService.findUserForManagementByPage(pageable));
     }
 
     /**
