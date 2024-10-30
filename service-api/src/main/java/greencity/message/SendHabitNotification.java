@@ -16,7 +16,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SendHabitNotification implements Serializable {
-    @Email(message = "Invalid email format")
     private String name;
+    @Email(message = "Invalid email format")
     private String email;
 }
