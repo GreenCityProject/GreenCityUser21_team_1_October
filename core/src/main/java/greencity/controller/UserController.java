@@ -400,20 +400,26 @@ public class UserController {
     }
 
     /**
-     * Method find user by principal.
+     * Method find user by email.
      *
+     * @param email the email of the user to find
      * @return {@link ResponseEntity}.
      * @author Orest Mamchuk
      */
-    @Operation(summary = "Find current user by principal")
+    @Operation(summary = "Find user by email")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = HttpStatuses.OK),
-        @ApiResponse(responseCode = "400", description = HttpStatuses.BAD_REQUEST),
-        @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
+            @ApiResponse(responseCode = "200", description = HttpStatuses.OK),
+            @ApiResponse(responseCode = "400", description = HttpStatuses.BAD_REQUEST),
+            @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
+            @ApiResponse(responseCode = "404", description = HttpStatuses.NOT_FOUND)
     })
     @GetMapping("/findByEmail")
     public ResponseEntity<UserVO> findByEmail(@RequestParam String email) {
-        return ResponseEntity.status(HttpStatus.OK).body(userService.findByEmail(email));
+        UserVO user = userService.findByEmail(email);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(user);
     }
 
     /**
