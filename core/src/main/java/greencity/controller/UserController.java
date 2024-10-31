@@ -375,6 +375,9 @@ public class UserController {
     @GetMapping("isOnline/{userId}/")
     public ResponseEntity<Boolean> checkIfTheUserIsOnline(
         @Parameter(description = "Id of the user. Cannot be empty.") @PathVariable Long userId) {
+        if (userId == null || userId <= 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(userService.checkIfTheUserIsOnline(userId));

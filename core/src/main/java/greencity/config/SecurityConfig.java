@@ -14,7 +14,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.authentication.configuration.EnableGlobalAuthentication;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -38,7 +37,6 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
  */
 @Configuration
 @EnableWebSecurity
-@EnableGlobalAuthentication
 public class SecurityConfig {
     private final JwtTool jwtTool;
     private final UserService userService;
@@ -99,6 +97,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(req -> req
                         .requestMatchers("/static/css/**", "/static/img/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/error").permitAll()
                         .requestMatchers(
                                 "/v2/api-docs/**",
                                 "/v3/api-docs/**",
@@ -130,10 +129,11 @@ public class SecurityConfig {
                                 "/ownSecurity/signIn",
                                 "/ownSecurity/updatePassword")
                         .permitAll()
+                        .requestMatchers(HttpMethod.GET, "/user/isOnline/{userId}/").authenticated()
                         .requestMatchers(HttpMethod.GET, USER_LINK,
                                 "/user/shopping-list-items/habits/{habitId}/shopping-list",
                                 "/user/{userId}/{habitId}/custom-shopping-list-items/available",
-                                "/user/{userId}/profile/", "/user/isOnline/{userId}/",
+                                "/user/{userId}/profile/",
                                 "/user/{userId}/profileStatistics/",
                                 "/user/userAndSixFriendsWithOnlineStatus",
                                 "/user/userAndAllFriendsWithOnlineStatus",
