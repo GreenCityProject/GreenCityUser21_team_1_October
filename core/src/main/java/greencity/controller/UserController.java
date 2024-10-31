@@ -421,6 +421,7 @@ public class UserController {
         }
         return ResponseEntity.status(HttpStatus.OK).body(user);
     }
+    //return 404
 
     /**
      * Get {@link UserVO} by id.
