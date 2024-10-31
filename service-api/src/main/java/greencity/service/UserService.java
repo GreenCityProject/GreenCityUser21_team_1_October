@@ -383,4 +383,6 @@ public interface UserService {
      * @author Ihor Volianskyi
      */
     UserVO findAdminById(Long id);
+
+    boolean existsUserByEmail(String email);
 }

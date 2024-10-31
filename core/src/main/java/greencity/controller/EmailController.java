@@ -8,6 +8,7 @@ import greencity.message.SendChangePlaceStatusEmailMessage;
 import greencity.message.SendHabitNotification;
 import greencity.message.SendReportEmailMessage;
 import greencity.service.EmailService;
+import greencity.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -23,6 +24,9 @@ import org.springframework.web.bind.annotation.*;
 public class EmailController {
     @Autowired
     private final EmailService emailService;
+
+    @Autowired
+    private final UserService userService;
 
     /**
      * Method for sending news for users who subscribed for updates.
@@ -72,7 +76,14 @@ public class EmailController {
      */
     @PostMapping("/sendHabitNotification")
     public ResponseEntity<Object> sendHabitNotification(@RequestBody SendHabitNotification sendHabitNotification) {
-        emailService.sendHabitNotification(sendHabitNotification.getName(), sendHabitNotification.getEmail());
+        String name = sendHabitNotification.getName();
+        String email = sendHabitNotification.getEmail();
+
+        if(!userService.existsUserByEmail(email)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        emailService.sendHabitNotification(name, email);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
