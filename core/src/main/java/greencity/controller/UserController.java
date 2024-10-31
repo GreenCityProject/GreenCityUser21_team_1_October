@@ -415,13 +415,21 @@ public class UserController {
     })
     @GetMapping("/findByEmail")
     public ResponseEntity<UserVO> findByEmail(@RequestParam String email) {
+        if (!isValidEmail(email)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
         UserVO user = userService.findByEmail(email);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
         return ResponseEntity.status(HttpStatus.OK).body(user);
     }
-    //return 404
+
+    private boolean isValidEmail(String email) {
+        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+        return email.matches(emailRegex);
+    }
+//400 - 404 added here
 
     /**
      * Get {@link UserVO} by id.
