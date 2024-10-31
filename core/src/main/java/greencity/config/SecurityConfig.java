@@ -14,6 +14,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.authentication.configuration.EnableGlobalAuthentication;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -37,6 +38,7 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
  */
 @Configuration
 @EnableWebSecurity
+@EnableGlobalAuthentication
 public class SecurityConfig {
     private final JwtTool jwtTool;
     private final UserService userService;
@@ -71,19 +73,19 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.cors(corsCustomizer -> corsCustomizer.configurationSource(request -> {
-            CorsConfiguration config = new CorsConfiguration();
-            config.setAllowedOrigins(Collections.singletonList("http://localhost:4200"));
-            config.setAllowedOrigins(Collections.singletonList("http://localhost:4205"));
-            config.setAllowedMethods(
-                    Arrays.asList("GET", "POST", "OPTIONS", "DELETE", "PUT", "PATCH"));
-            config.setAllowedHeaders(
-                    Arrays.asList("Access-Control-Allow-Origin", "Access-Control-Allow-Headers",
-                            "X-Requested-With", "Origin", "Content-Type", "Accept", "Authorization"));
-            config.setAllowCredentials(true);
-            config.setAllowedHeaders(Collections.singletonList("*"));
-            config.setMaxAge(3600L);
-            return config;
-        }))
+                    CorsConfiguration config = new CorsConfiguration();
+                    config.setAllowedOrigins(Collections.singletonList("http://localhost:4200"));
+                    config.setAllowedOrigins(Collections.singletonList("http://localhost:4205"));
+                    config.setAllowedMethods(
+                            Arrays.asList("GET", "POST", "OPTIONS", "DELETE", "PUT", "PATCH"));
+                    config.setAllowedHeaders(
+                            Arrays.asList("Access-Control-Allow-Origin", "Access-Control-Allow-Headers",
+                                    "X-Requested-With", "Origin", "Content-Type", "Accept", "Authorization"));
+                    config.setAllowCredentials(true);
+                    config.setAllowedHeaders(Collections.singletonList("*"));
+                    config.setMaxAge(3600L);
+                    return config;
+                }))
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
                 .addFilterBefore(
@@ -97,7 +99,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests(req -> req
                         .requestMatchers("/static/css/**", "/static/img/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/error").permitAll()
                         .requestMatchers(
                                 "/v2/api-docs/**",
                                 "/v3/api-docs/**",
@@ -129,11 +130,10 @@ public class SecurityConfig {
                                 "/ownSecurity/signIn",
                                 "/ownSecurity/updatePassword")
                         .permitAll()
-                        .requestMatchers(HttpMethod.GET, "/user/isOnline/{userId}/").authenticated()
                         .requestMatchers(HttpMethod.GET, USER_LINK,
                                 "/user/shopping-list-items/habits/{habitId}/shopping-list",
                                 "/user/{userId}/{habitId}/custom-shopping-list-items/available",
-                                "/user/{userId}/profile/",
+                                "/user/{userId}/profile/", "/user/isOnline/{userId}/",
                                 "/user/{userId}/profileStatistics/",
                                 "/user/userAndSixFriendsWithOnlineStatus",
                                 "/user/userAndAllFriendsWithOnlineStatus",
