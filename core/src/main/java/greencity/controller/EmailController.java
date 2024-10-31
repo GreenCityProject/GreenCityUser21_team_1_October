@@ -4,6 +4,7 @@ import greencity.constant.HttpStatuses;
 import greencity.dto.econews.EcoNewsForSendEmailDto;
 import greencity.dto.notification.NotificationDto;
 import greencity.dto.violation.UserViolationMailDto;
+import greencity.exception.exceptions.BadRequestException;
 import greencity.message.SendChangePlaceStatusEmailMessage;
 import greencity.message.SendHabitNotification;
 import greencity.message.SendReportEmailMessage;
@@ -16,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/email")
@@ -32,6 +35,11 @@ public class EmailController {
      */
     @PostMapping("/addEcoNews")
     public ResponseEntity<Object> addEcoNews(@RequestBody EcoNewsForSendEmailDto message) {
+        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9+_.-]+$";
+        Pattern pattern = Pattern.compile(emailRegex);
+        if (!pattern.matcher(message.getAuthor().getEmail()).matches()) {
+            throw new BadRequestException("Invalid email format for author: " + message.getAuthor().getEmail());
+        }
         emailService.sendCreatedNewsForAuthor(message);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
