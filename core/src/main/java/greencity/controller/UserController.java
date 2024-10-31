@@ -372,7 +372,7 @@ public class UserController {
         @ApiResponse(responseCode = "400", description = HttpStatuses.BAD_REQUEST),
         @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
     })
-    @GetMapping("isOnline/{userId}/")
+    @GetMapping("/isOnline/{userId}")
     public ResponseEntity<Boolean> checkIfTheUserIsOnline(
         @Parameter(description = "Id of the user. Cannot be empty.") @PathVariable Long userId) {
         return ResponseEntity
