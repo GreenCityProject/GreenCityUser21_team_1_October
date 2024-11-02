@@ -22,8 +22,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+
 import java.util.Arrays;
 import java.util.Collections;
+
 import static greencity.constant.AppConstant.*;
 import static jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 import static jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED;
@@ -129,7 +131,6 @@ public class SecurityConfig {
                                 "/ownSecurity/signIn",
                                 "/ownSecurity/updatePassword")
                         .permitAll()
-                        .requestMatchers(HttpMethod.GET,"/user/isOnline/{userId}/").authenticated()
                         .requestMatchers(HttpMethod.GET, USER_LINK,
                                 "/user/shopping-list-items/habits/{habitId}/shopping-list",
                                 "/user/{userId}/{habitId}/custom-shopping-list-items/available",
@@ -179,7 +180,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,
                                 "/user/get-all-authorities",
                                 "/user/get-positions-authorities",
-                                "/user/get-employee-login-positions")
+                                "/user/get-employee-login-positions",
+                                "/user/isOnline/{userId}/")
                         .hasAnyRole(ADMIN, UBS_EMPLOYEE, MODERATOR, EMPLOYEE)
                         .requestMatchers(HttpMethod.PATCH,
                                 "/user/shopping-list-items/{userShoppingListItemId}",
