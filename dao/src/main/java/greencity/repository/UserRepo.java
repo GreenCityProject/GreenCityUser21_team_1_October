@@ -34,6 +34,8 @@ public interface UserRepo extends JpaRepository<User, Long>, JpaSpecificationExe
      */
     Optional<User> findByEmail(String email);
 
+    @Query("select u.id from User u where u.email like %?1")
+    Optional<Long> findUserIdByEmail (String email);
     /**
      * Find {@link User} by page.
      *
