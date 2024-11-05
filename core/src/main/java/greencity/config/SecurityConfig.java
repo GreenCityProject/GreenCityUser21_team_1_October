@@ -184,7 +184,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,
                                 "/user/get-all-authorities",
                                 "/user/get-positions-authorities",
-                                "/user/get-employee-login-positions")
+                                "/user/get-employee-login-positions",
+                                "/user/isOnline/{userId}/")
                         .hasAnyRole(ADMIN, UBS_EMPLOYEE, MODERATOR, EMPLOYEE)
                         .requestMatchers(HttpMethod.PATCH,
                                 "/user/shopping-list-items/{userShoppingListItemId}",
