@@ -76,6 +76,9 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendChangePlaceStatusEmail(String authorName, String placeName,
         String placeStatus, String authorEmail) {
+        if (!userRepo.findByEmail(authorEmail).isPresent()) {
+            throw new NotFoundException("User with email " + authorEmail + " not found");
+        }
         log.info(LogMessage.IN_SEND_CHANGE_PLACE_STATUS_EMAIL, placeName);
         Map<String, Object> model = new HashMap<>();
         model.put(EmailConstants.CLIENT_LINK, clientLink);
@@ -244,9 +247,14 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void sendHabitNotification(String name, String email) {
+        var user = userRepo.findByEmail(email);
+        if (user.isPresent()){
         String subject = "Notification about not marked habits";
         String content = "Dear " + name + ", you haven't marked any habit during last 3 days";
-        sendEmail(email, subject, content);
+        sendEmail(email, subject, content);}
+        else {
+            throw new NotFoundException(ErrorMessage.USER_NOT_FOUND_BY_EMAIL + email);
+        }
     }
 
     @Override
