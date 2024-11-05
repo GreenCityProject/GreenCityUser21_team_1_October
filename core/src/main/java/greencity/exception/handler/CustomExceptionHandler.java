@@ -385,10 +385,4 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(exceptionResponse);
     }
-
-    @ExceptionHandler(PropertyReferenceException.class)
-    public final ResponseEntity<Object> handlePropertyReferenceException(
-            PropertyReferenceException exception) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
-    }
 }
