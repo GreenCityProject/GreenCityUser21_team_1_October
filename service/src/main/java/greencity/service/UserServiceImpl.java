@@ -81,8 +81,8 @@ public class UserServiceImpl implements UserService {
         User user = userRepo.findById(id)
             .orElseThrow(() -> new WrongIdException(ErrorMessage.USER_NOT_FOUND_BY_ID + id));
         if (user.getLanguage() == null) {
-            Language defaultLanguage = languageRepo.findById(2L)
-                    .orElseThrow(() -> new NotFoundException(ErrorMessage.LANGUAGE_NOT_FOUND_BY_ID + 2L));
+            Language defaultLanguage = languageRepo.findById(1L)
+                    .orElseThrow(() -> new NotFoundException(ErrorMessage.LANGUAGE_NOT_FOUND_BY_ID + 1L));
             user.setLanguage(defaultLanguage);
         }
         return modelMapper.map(user, UserVO.class);

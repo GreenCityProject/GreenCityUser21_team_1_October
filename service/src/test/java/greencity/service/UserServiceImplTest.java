@@ -69,58 +69,58 @@ class UserServiceImplTest {
     LanguageRepo languageRepo;
 
     private User user = User.builder()
-        .id(1L)
-        .name("Taras")
-        .email("test@gmail.com")
-        .role(ROLE_USER)
-        .userStatus(ACTIVATED)
-        .emailNotification(EmailNotification.DISABLED)
-        .lastActivityTime(LocalDateTime.of(2020, 10, 10, 20, 10, 10))
-        .dateOfRegistration(LocalDateTime.now())
-        .build();
+            .id(1L)
+            .name("Taras")
+            .email("test@gmail.com")
+            .role(ROLE_USER)
+            .userStatus(ACTIVATED)
+            .emailNotification(EmailNotification.DISABLED)
+            .lastActivityTime(LocalDateTime.of(2020, 10, 10, 20, 10, 10))
+            .dateOfRegistration(LocalDateTime.now())
+            .build();
 
     private User user1 = User.builder()
-        .uuid("444e66e8-8daa-4cb0-8269-a8d856e7dd15")
-        .name("Nazar")
-        .build();
+            .uuid("444e66e8-8daa-4cb0-8269-a8d856e7dd15")
+            .name("Nazar")
+            .build();
 
     private UserVO userVO = UserVO.builder()
-        .id(1L)
-        .name("Test Testing")
-        .email("test@gmail.com")
-        .role(ROLE_USER)
-        .userStatus(ACTIVATED)
-        .emailNotification(EmailNotification.DISABLED)
-        .lastActivityTime(LocalDateTime.of(2020, 10, 10, 20, 10, 10))
-        .dateOfRegistration(LocalDateTime.now())
-        .build();
-    private User user2 = User.builder()
-        .id(2L)
-        .name("Test Testing")
-        .email("test2@gmail.com")
-        .role(Role.ROLE_MODERATOR)
-        .userStatus(ACTIVATED)
-        .emailNotification(EmailNotification.DISABLED)
-        .lastActivityTime(LocalDateTime.of(2020, 10, 10, 20, 10, 10))
-        .dateOfRegistration(LocalDateTime.now())
-        .build();
-    private UserVO userVO2 =
-        UserVO.builder()
-            .id(2L)
+            .id(1L)
             .name("Test Testing")
             .email("test@gmail.com")
+            .role(ROLE_USER)
+            .userStatus(ACTIVATED)
+            .emailNotification(EmailNotification.DISABLED)
+            .lastActivityTime(LocalDateTime.of(2020, 10, 10, 20, 10, 10))
+            .dateOfRegistration(LocalDateTime.now())
+            .build();
+    private User user2 = User.builder()
+            .id(2L)
+            .name("Test Testing")
+            .email("test2@gmail.com")
             .role(Role.ROLE_MODERATOR)
             .userStatus(ACTIVATED)
             .emailNotification(EmailNotification.DISABLED)
             .lastActivityTime(LocalDateTime.of(2020, 10, 10, 20, 10, 10))
             .dateOfRegistration(LocalDateTime.now())
             .build();
+    private UserVO userVO2 =
+            UserVO.builder()
+                    .id(2L)
+                    .name("Test Testing")
+                    .email("test@gmail.com")
+                    .role(Role.ROLE_MODERATOR)
+                    .userStatus(ACTIVATED)
+                    .emailNotification(EmailNotification.DISABLED)
+                    .lastActivityTime(LocalDateTime.of(2020, 10, 10, 20, 10, 10))
+                    .dateOfRegistration(LocalDateTime.now())
+                    .build();
     private UbsCustomerDto ubsCustomerDto =
-        UbsCustomerDto.builder()
-            .name("Nazar")
-            .phoneNumber("09876543322")
-            .email("nazar98struk.gmail.com")
-            .build();
+            UbsCustomerDto.builder()
+                    .name("Nazar")
+                    .phoneNumber("09876543322")
+                    .email("nazar98struk.gmail.com")
+                    .build();
 
     private String language = "ua";
     private Long userId = user.getId();
@@ -137,10 +137,10 @@ class UserServiceImplTest {
     @Test
     void findAllByEmailNotification() {
         when(userRepo.findAllByEmailNotification(any(EmailNotification.class)))
-            .thenReturn(Collections.singletonList(user));
+                .thenReturn(Collections.singletonList(user));
         when(modelMapper.map(user, UserVO.class)).thenReturn(userVO);
         assertEquals(Collections.singletonList(userVO),
-            userService.findAllByEmailNotification(EmailNotification.IMMEDIATELY));
+                userService.findAllByEmailNotification(EmailNotification.IMMEDIATELY));
     }
 
     @Test
@@ -168,6 +168,11 @@ class UserServiceImplTest {
 
     @Test
     void updateUserStatusDeactivatedTest() {
+        Language defaultLanguage = new Language();
+        defaultLanguage.setId(1L);
+        defaultLanguage.setCode("ua");
+        when(languageRepo.findById(1L)).thenReturn(Optional.of(defaultLanguage));
+
         when(userRepo.findById(userId2)).thenReturn(Optional.of(user2));
         when(modelMapper.map(user2, UserVO.class)).thenReturn(userVO2);
         when(userRepo.findByEmail(any())).thenReturn(Optional.of(user2));
@@ -184,6 +189,11 @@ class UserServiceImplTest {
 
     @Test
     void updateUserStatusLowRoleLevelException() {
+        Language defaultLanguage = new Language();
+        defaultLanguage.setId(1L);
+        defaultLanguage.setCode("ua");
+        when(languageRepo.findById(1L)).thenReturn(Optional.of(defaultLanguage));
+
         user.setRole(Role.ROLE_MODERATOR);
         userVO.setRole(Role.ROLE_MODERATOR);
         when(userRepo.findByEmail(any())).thenReturn(Optional.of(user2));
@@ -206,8 +216,8 @@ class UserServiceImplTest {
 
         // then
         assertEquals(
-            Role.ROLE_MODERATOR,
-            userService.updateRole(userId, Role.ROLE_MODERATOR, user2.getEmail()).getRole());
+                Role.ROLE_MODERATOR,
+                userService.updateRole(userId, Role.ROLE_MODERATOR, user2.getEmail()).getRole());
     }
 
     @Test
@@ -225,9 +235,14 @@ class UserServiceImplTest {
     @Test
     void findByIdTest() {
         Long id = 1L;
+        Language defaultLanguage = new Language();
+        defaultLanguage.setId(1L);
+        defaultLanguage.setCode("ua");
+        when(languageRepo.findById(1L)).thenReturn(Optional.of(defaultLanguage));
 
         User user = new User();
         user.setId(1L);
+        user.setLanguage(defaultLanguage);
 
         when(userRepo.findById(id)).thenReturn(Optional.of(user));
         when(modelMapper.map(user, UserVO.class)).thenReturn(userVO);
@@ -254,6 +269,11 @@ class UserServiceImplTest {
 
     @Test
     void deleteByExistentIdTest() {
+        Language defaultLanguage = new Language();
+        defaultLanguage.setId(1L);
+        defaultLanguage.setCode("ua");
+        when(languageRepo.findById(1L)).thenReturn(Optional.of(defaultLanguage));
+
         when(userRepo.findById(userId)).thenReturn(Optional.of(user));
         when(modelMapper.map(user, UserVO.class)).thenReturn(userVO);
         when(modelMapper.map(userVO, User.class)).thenReturn(user);
@@ -314,8 +334,8 @@ class UserServiceImplTest {
         List<UserForListDto> userForListDtos = Collections.singletonList(userForListDto);
 
         PageableDto<UserForListDto> userPageableDto =
-            new PageableDto<>(userForListDtos,
-                userForListDtos.size(), 0, 1);
+                new PageableDto<>(userForListDtos,
+                        userForListDtos.size(), 0, 1);
 
         ReflectionTestUtils.setField(userService, "modelMapper", new ModelMapper());
 
@@ -334,13 +354,18 @@ class UserServiceImplTest {
     @Test
     void getEmailStatusesTest() {
         List<EmailNotification> placeStatuses =
-            Arrays.asList(EmailNotification.class.getEnumConstants());
+                Arrays.asList(EmailNotification.class.getEnumConstants());
 
         assertEquals(placeStatuses, userService.getEmailNotificationsStatuses());
     }
 
     @Test
     void updateLastVisit() {
+        Language defaultLanguage = new Language();
+        defaultLanguage.setId(1L);
+        defaultLanguage.setCode("ua");
+        when(languageRepo.findById(1L)).thenReturn(Optional.of(defaultLanguage));
+
         when(modelMapper.map(userVO, User.class)).thenReturn(user);
         when(userRepo.findById(userId)).thenReturn(Optional.of(user));
         when(modelMapper.map(user, UserVO.class)).thenReturn(userVO);
@@ -365,8 +390,8 @@ class UserServiceImplTest {
         List<UserForListDto> userForListDtos = Collections.singletonList(userForListDto);
 
         PageableDto<UserForListDto> userPageableDto =
-            new PageableDto<>(userForListDtos,
-                userForListDtos.size(), 0, 1);
+                new PageableDto<>(userForListDtos,
+                        userForListDtos.size(), 0, 1);
 
         ReflectionTestUtils.setField(userService, "modelMapper", new ModelMapper());
 
@@ -430,23 +455,23 @@ class UserServiceImplTest {
         userProfilePictureDto.setProfilePicturePath(null);
         when(userRepo.findByEmail(anyString())).thenReturn(Optional.of(user));
         assertThrows(BadRequestException.class,
-            () -> userService.updateUserProfilePicture(null, "testmail@gmail.com",
-                "test"));
+                () -> userService.updateUserProfilePicture(null, "testmail@gmail.com",
+                        "test"));
     }
 
     @Test
     void geTUserProfileStatistics() {
         when(restClient.findAmountOfPublishedNews(TestConst.SIMPLE_LONG_NUMBER))
-            .thenReturn(TestConst.SIMPLE_LONG_NUMBER);
+                .thenReturn(TestConst.SIMPLE_LONG_NUMBER);
         when(restClient.findAmountOfAcquiredHabits(TestConst.SIMPLE_LONG_NUMBER))
-            .thenReturn(TestConst.SIMPLE_LONG_NUMBER);
+                .thenReturn(TestConst.SIMPLE_LONG_NUMBER);
         when(restClient.findAmountOfHabitsInProgress(TestConst.SIMPLE_LONG_NUMBER))
-            .thenReturn(TestConst.SIMPLE_LONG_NUMBER);
+                .thenReturn(TestConst.SIMPLE_LONG_NUMBER);
         userService.getUserProfileStatistics(TestConst.SIMPLE_LONG_NUMBER);
         assertEquals(ModelUtils.USER_PROFILE_STATISTICS_DTO,
-            userService.getUserProfileStatistics(TestConst.SIMPLE_LONG_NUMBER));
+                userService.getUserProfileStatistics(TestConst.SIMPLE_LONG_NUMBER));
         assertNotEquals(ModelUtils.USER_PROFILE_STATISTICS_DTO,
-            userService.getUserProfileStatistics(TestConst.SIMPLE_LONG_NUMBER_BAD_VALUE));
+                userService.getUserProfileStatistics(TestConst.SIMPLE_LONG_NUMBER_BAD_VALUE));
     }
 
     @Test
@@ -455,21 +480,21 @@ class UserServiceImplTest {
         user.setUserCredo("credo");
         Page<User> userPages = new PageImpl<>(List.of(user, user, user), pageable, 3);
         when(userRepo.searchBy(pageable, "query"))
-            .thenReturn(userPages);
+                .thenReturn(userPages);
         when(modelMapper.map(user, UserManagementDto.class)).thenReturn(ModelUtils.CREATE_USER_MANAGER_DTO);
         List<UserManagementDto> users = userPages.stream()
-            .map(user -> modelMapper.map(user, UserManagementDto.class))
-            .collect(Collectors.toList());
+                .map(user -> modelMapper.map(user, UserManagementDto.class))
+                .collect(Collectors.toList());
         PageableAdvancedDto<UserManagementDto> pageableAdvancedDto = new PageableAdvancedDto<>(
-            users,
-            userPages.getTotalElements(),
-            userPages.getPageable().getPageNumber(),
-            userPages.getTotalPages(),
-            userPages.getNumber(),
-            userPages.hasPrevious(),
-            userPages.hasNext(),
-            userPages.isFirst(),
-            userPages.isLast());
+                users,
+                userPages.getTotalElements(),
+                userPages.getPageable().getPageNumber(),
+                userPages.getTotalPages(),
+                userPages.getNumber(),
+                userPages.hasPrevious(),
+                userPages.hasNext(),
+                userPages.isFirst(),
+                userPages.isLast());
         assertEquals(pageableAdvancedDto, userService.searchBy(pageable, "query"));
     }
 
@@ -489,7 +514,7 @@ class UserServiceImplTest {
         var request = UserProfileDtoRequest.builder().build();
         when(userRepo.findByEmail(anyString())).thenReturn(Optional.empty());
         Exception thrown = assertThrows(WrongEmailException.class,
-            () -> userService.saveUserProfile(request, "test@gmail.com"));
+                () -> userService.saveUserProfile(request, "test@gmail.com"));
         assertEquals(ErrorMessage.USER_NOT_FOUND_BY_EMAIL + "test@gmail.com", thrown.getMessage());
         verify(userRepo).findByEmail(anyString());
     }
@@ -535,7 +560,7 @@ class UserServiceImplTest {
     void checkIfTheUserIsOnlineEqualsFalseTest() {
         ReflectionTestUtils.setField(userService, "timeAfterLastActivity", 300000);
         LocalDateTime localDateTime = LocalDateTime.of(
-            2015, Month.JULY, 29, 19, 30, 40);
+                2015, Month.JULY, 29, 19, 30, 40);
         Timestamp userLastActivityTime = Timestamp.valueOf(localDateTime);
         User user = ModelUtils.getUser();
 
@@ -553,19 +578,19 @@ class UserServiceImplTest {
         List<User> userList = Collections.singletonList(ModelUtils.getUser());
         Page<User> users = new PageImpl<>(userList, pageable, userList.size());
         List<UserManagementDto> userManagementDtos =
-            users.getContent().stream()
-                .map(user -> modelMapper.map(user, UserManagementDto.class))
-                .collect(Collectors.toList());
+                users.getContent().stream()
+                        .map(user -> modelMapper.map(user, UserManagementDto.class))
+                        .collect(Collectors.toList());
         PageableAdvancedDto<UserManagementDto> userManagementDtoPageableDto = new PageableAdvancedDto<>(
-            userManagementDtos,
-            users.getTotalElements(),
-            users.getPageable().getPageNumber(),
-            users.getTotalPages(),
-            users.getNumber(),
-            users.hasPrevious(),
-            users.hasNext(),
-            users.isFirst(),
-            users.isLast());
+                userManagementDtos,
+                users.getTotalElements(),
+                users.getPageable().getPageNumber(),
+                users.getTotalPages(),
+                users.getNumber(),
+                users.hasPrevious(),
+                users.hasNext(),
+                users.isFirst(),
+                users.isLast());
         when(userRepo.findAll(pageable)).thenReturn(users);
         assertEquals(userManagementDtoPageableDto, userService.findUserForManagementByPage(pageable));
     }
@@ -599,7 +624,7 @@ class UserServiceImplTest {
         when(userRepo.findByEmail(anyString())).thenReturn(Optional.empty());
 
         Exception thrown = assertThrows(NotFoundException.class,
-            () -> userService.findNotDeactivatedByEmail("test@gmail.com"));
+                () -> userService.findNotDeactivatedByEmail("test@gmail.com"));
 
         assertEquals(ErrorMessage.USER_NOT_FOUND_BY_EMAIL, thrown.getMessage());
     }
@@ -609,25 +634,25 @@ class UserServiceImplTest {
         List<String> test = List.of();
         User user = ModelUtils.getUser();
         user.setLanguage(Language.builder()
-            .id(1L)
-            .code("en")
-            .build());
+                .id(1L)
+                .code("en")
+                .build());
         when(userRepo.findById(1L)).thenReturn(Optional.of(user));
         when(userRepo.findById(1L)).thenReturn(Optional.of(user));
         user.setUserStatus(DEACTIVATED);
         when(userRepo.save(user)).thenReturn(user);
         UserDeactivationReason userReason = UserDeactivationReason.builder()
-            .dateTimeOfDeactivation(LocalDateTime.now())
-            .reason("test")
-            .user(user)
-            .build();
+                .dateTimeOfDeactivation(LocalDateTime.now())
+                .reason("test")
+                .user(user)
+                .build();
         when(userDeactivationRepo.save(userReason)).thenReturn(userReason);
         assertEquals(UserDeactivationReasonDto.builder()
-            .email(user.getEmail())
-            .name(user.getName())
-            .deactivationReasons(test)
-            .lang(user.getLanguage().getCode())
-            .build(), userService.deactivateUser(1L, test));
+                .email(user.getEmail())
+                .name(user.getName())
+                .deactivationReasons(test)
+                .lang(user.getLanguage().getCode())
+                .build(), userService.deactivateUser(1L, test));
     }
 
     @Test
@@ -635,15 +660,15 @@ class UserServiceImplTest {
         List<String> test1 = List.of();
         User user = ModelUtils.getUser();
         user.setLanguage(Language.builder()
-            .id(1L)
-            .code("en")
-            .build());
+                .id(1L)
+                .code("en")
+                .build());
         UserDeactivationReason test = UserDeactivationReason.builder()
-            .id(1L)
-            .user(user)
-            .reason("test")
-            .dateTimeOfDeactivation(LocalDateTime.now())
-            .build();
+                .id(1L)
+                .user(user)
+                .reason("test")
+                .dateTimeOfDeactivation(LocalDateTime.now())
+                .build();
         when(userDeactivationRepo.getLastDeactivationReasons(1L)).thenReturn(Optional.of(test));
         assertEquals(test1, userService.getDeactivationReason(1L, "en"));
         assertEquals(test1, userService.getDeactivationReason(1L, "ua"));
@@ -659,17 +684,17 @@ class UserServiceImplTest {
     void setActivatedStatus() {
         User user = ModelUtils.getUser();
         user.setLanguage(Language.builder()
-            .id(1L)
-            .code("en")
-            .build());
+                .id(1L)
+                .code("en")
+                .build());
         when(userRepo.findById(1L)).thenReturn(Optional.of(user));
         user.setUserStatus(ACTIVATED);
         when(userRepo.save(user)).thenReturn(user);
         assertEquals(UserActivationDto.builder()
-            .email(user.getEmail())
-            .name(user.getName())
-            .lang(user.getLanguage().getCode())
-            .build(), userService.setActivatedStatus(userId));
+                .email(user.getEmail())
+                .name(user.getName())
+                .lang(user.getLanguage().getCode())
+                .build(), userService.setActivatedStatus(userId));
     }
 
     @Test
@@ -708,6 +733,11 @@ class UserServiceImplTest {
 
     @Test
     void findByIdAndToken() {
+        Language defaultLanguage = new Language();
+        defaultLanguage.setId(1L);
+        defaultLanguage.setCode("ua");
+        when(languageRepo.findById(1L)).thenReturn(Optional.of(defaultLanguage));
+
         VerifyEmail verifyEmail = new VerifyEmail();
         verifyEmail.setId(2L);
         verifyEmail.setExpiryDate(LocalDateTime.now());
@@ -725,6 +755,11 @@ class UserServiceImplTest {
 
     @Test
     void findByIdAndToken2() {
+        Language defaultLanguage = new Language();
+        defaultLanguage.setId(1L);
+        defaultLanguage.setCode("ua");
+        when(languageRepo.findById(1L)).thenReturn(Optional.of(defaultLanguage));
+
         when(userRepo.findById(userId2)).thenReturn(Optional.of(user2));
         when(modelMapper.map(Optional.of(user2), UserVO.class)).thenReturn(userVO2);
         when(modelMapper.map(userVO2, User.class)).thenReturn(user2);
@@ -735,42 +770,42 @@ class UserServiceImplTest {
     @Test
     void getAvailableCustomShoppingListItem() {
         CustomShoppingListItemResponseDto customShoppingListItemResponseDto =
-            new CustomShoppingListItemResponseDto(1L, "test");
+                new CustomShoppingListItemResponseDto(1L, "test");
         when(restClient.getAllAvailableCustomShoppingListItems(userId, habitId))
-            .thenReturn(Collections.singletonList(customShoppingListItemResponseDto));
+                .thenReturn(Collections.singletonList(customShoppingListItemResponseDto));
 
         assertEquals(Collections.singletonList(customShoppingListItemResponseDto),
-            userService.getAvailableCustomShoppingListItems(userId, habitId));
+                userService.getAvailableCustomShoppingListItems(userId, habitId));
     }
 
     @Test
     void searchTest() {
         Pageable pageable = PageRequest.of(0, 20);
         UserManagementViewDto userViewDto =
-            UserManagementViewDto.builder()
-                .id("1L")
-                .name("vivo")
-                .email("test@ukr.net")
-                .userCredo("Hello")
-                .role("1")
-                .userStatus("1")
-                .build();
+                UserManagementViewDto.builder()
+                        .id("1L")
+                        .name("vivo")
+                        .email("test@ukr.net")
+                        .userCredo("Hello")
+                        .role("1")
+                        .userStatus("1")
+                        .build();
         UserManagementVO userManagementVO =
-            UserManagementVO.builder()
-                .id(1L)
-                .name("vivo")
-                .email("test@ukr.net")
-                .userCredo("Hello")
-                .role(ROLE_USER)
-                .userStatus(ACTIVATED)
-                .build();
+                UserManagementVO.builder()
+                        .id(1L)
+                        .name("vivo")
+                        .email("test@ukr.net")
+                        .userCredo("Hello")
+                        .role(ROLE_USER)
+                        .userStatus(ACTIVATED)
+                        .build();
         List<UserManagementVO> userManagementVOS = Collections.singletonList(userManagementVO);
         List<User> users = Collections.singletonList(new User());
         Page<User> pageUsers = new PageImpl<>(users, pageable, 0);
         when(userRepo.findAll(any(UserSpecification.class), eq(pageable))).thenReturn(pageUsers);
         when(modelMapper.map(users.get(0), UserManagementVO.class)).thenReturn(userManagementVO);
         PageableAdvancedDto<UserManagementVO> actual = new PageableAdvancedDto<>(userManagementVOS, 1, 0, 1, 0,
-            false, false, true, true);
+                false, false, true, true);
         PageableAdvancedDto<UserManagementVO> expected = userService.search(pageable, userViewDto);
         assertEquals(expected, actual);
     }
@@ -790,7 +825,7 @@ class UserServiceImplTest {
     void createUbsRecordThrowNotFoundExceptionTest() {
         when(userRepo.findById(1L)).thenReturn(Optional.empty());
         Exception thrown = assertThrows(NotFoundException.class,
-            () -> userService.createUbsRecord(userVO));
+                () -> userService.createUbsRecord(userVO));
         assertEquals(ErrorMessage.USER_NOT_FOUND_BY_ID, thrown.getMessage());
         verify(userRepo).findById(1L);
     }
@@ -823,12 +858,12 @@ class UserServiceImplTest {
         when(userRepo.findById(2L)).thenReturn(Optional.ofNullable(TEST_USER));
 
         assertThrows(LowRoleLevelException.class,
-            () -> userService.findAdminById(2L));
+                () -> userService.findAdminById(2L));
     }
 
     private static Stream<Arguments> provideUuidOptionalUserResultForCheckIfUserExistsByUuidTest() {
         return Stream.of(
-            Arguments.of("444e66e8-8daa-4cb0-8269-a8d856e7dd15", Optional.of(getUser()), true),
-            Arguments.of("uuid", Optional.empty(), false));
+                Arguments.of("444e66e8-8daa-4cb0-8269-a8d856e7dd15", Optional.of(getUser()), true),
+                Arguments.of("uuid", Optional.empty(), false));
     }
 }
