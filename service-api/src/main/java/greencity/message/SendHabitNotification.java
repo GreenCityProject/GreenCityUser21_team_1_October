@@ -1,6 +1,8 @@
 package greencity.message;
 
 import java.io.Serializable;
+
+import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,5 +17,6 @@ import lombok.ToString;
 @NoArgsConstructor
 public class SendHabitNotification implements Serializable {
     private String name;
+    @Email(message = "Invalid email format")
     private String email;
 }
