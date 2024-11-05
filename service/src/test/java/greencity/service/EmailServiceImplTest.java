@@ -27,10 +27,10 @@ import jakarta.mail.internet.MimeMessage;
 import java.util.*;
 import java.util.concurrent.Executors;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 class EmailServiceImplTest {
@@ -172,6 +172,20 @@ class EmailServiceImplTest {
         UserViolationMailDto dto = ModelUtils.getUserViolationMailDto();
         service.sendUserViolationEmail(dto);
         verify(javaMailSender).createMimeMessage();
+    }
+
+    @Test
+    void sendUserViolationInvalidEmailFormatTest() {
+        UserViolationMailDto invalidDto = new UserViolationMailDto();
+        invalidDto.setEmail("Test1gmail.com");
+        invalidDto.setLanguage("en");
+        invalidDto.setName("Test1");
+        invalidDto.setViolationDescription("124125sfgg");
+        Exception exception = assertThrows(NotFoundException.class, () -> {
+            service.sendUserViolationEmail(invalidDto);
+        });
+        assertEquals("Invalid format for user: Test1gmail.com", exception.getMessage());
+        verify(javaMailSender, never()).createMimeMessage();
     }
 
     @Test
