@@ -71,6 +71,29 @@ class EmailControllerTest {
     }
 
     @Test
+    void addEcoNewsWithInvalidEmail() throws Exception {
+        String invalidEmailContent =
+                "{\"unsubscribeToken\":\"string\"," +
+                        "\"creationDate\":\"2021-02-05T15:10:22.434Z\"," +
+                        "\"imagePath\":\"string\"," +
+                        "\"source\":\"string\"," +
+                        "\"author\":{\"id\":0,\"name\":\"string\",\"email\":\"invalid-email\"}," +
+                        "\"title\":\"string\"," +
+                        "\"text\":\"string\"}";
+
+        try {
+            mockPerform(invalidEmailContent, "/addEcoNews");
+
+            fail("Expected BadRequestException to be thrown");
+        } catch (Exception e) {
+            assertTrue(e.getCause() instanceof BadRequestException);
+            assertEquals("Invalid email format for author: invalid-email", e.getCause().getMessage());
+        }
+
+        verify(emailService, never()).sendCreatedNewsForAuthor(any(EcoNewsForSendEmailDto.class));
+    }
+
+    @Test
     void sendReport() throws Exception {
         String content = "{" +
                 "\"categoriesDtoWithPlacesDtoMap\":" +
