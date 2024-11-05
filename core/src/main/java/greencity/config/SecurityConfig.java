@@ -213,7 +213,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/user/{id}").hasRole(ADMIN)
                         .requestMatchers(HttpMethod.PATCH,
                                 "/user/status",
-                                "/user/role",
+                                "/user/{id}/role",
                                 "/user/update/role")
                         .hasAnyRole(ADMIN)
                         .requestMatchers(HttpMethod.POST, "/management/login")

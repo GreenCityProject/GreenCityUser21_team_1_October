@@ -95,7 +95,7 @@ public class UserController {
             @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
             @ApiResponse(responseCode = "403", description = HttpStatuses.FORBIDDEN)
     })
-    @PatchMapping("{id}/role")
+    @PatchMapping("/{id}/role")
     public ResponseEntity<UserRoleDto> updateRole(
             @PathVariable Long id,
             @NotNull @RequestBody Map<String, String> body,
