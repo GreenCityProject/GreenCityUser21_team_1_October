@@ -141,10 +141,12 @@ class EmailControllerTest {
 
     @Test
     void sendHabitNotification() throws Exception {
-        String content = "{" +
-            "\"email\":\"string\"," +
-            "\"name\":\"string\"" +
-            "}";
+        String content = """
+             {
+              "email": "test@example.com",
+              "name": "string"
+             }
+            """;
 
         mockPerform(content, "/sendHabitNotification");
 
