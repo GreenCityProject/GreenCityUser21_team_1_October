@@ -55,7 +55,7 @@ class UserControllerTestBug282 {
     }
 
     @Test
-    void shouldReturn400WhenUserAccessesWithInvalidParameter() throws Exception {
+    void shouldReturn400WhenAdminAccessesWithInvalidParameter() throws Exception {
         mockMvc.perform(get("/user/isOnline/error/", 1L)
                         .with(adminCredentials)
                         .contentType(MediaType.APPLICATION_JSON))
