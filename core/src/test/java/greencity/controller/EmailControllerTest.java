@@ -6,6 +6,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import greencity.dto.econews.EcoNewsForSendEmailDto;
 import greencity.dto.notification.NotificationDto;
 import greencity.dto.violation.UserViolationMailDto;
+import greencity.exception.exceptions.BadRequestException;
 import greencity.message.SendChangePlaceStatusEmailMessage;
 import greencity.message.SendHabitNotification;
 import greencity.message.SendReportEmailMessage;
@@ -22,6 +23,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import static com.jayway.jsonpath.internal.path.PathCompiler.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -64,6 +70,29 @@ class EmailControllerTest {
         EcoNewsForSendEmailDto message = objectMapper.readValue(content, EcoNewsForSendEmailDto.class);
 
         verify(emailService).sendCreatedNewsForAuthor(message);
+    }
+
+    @Test
+    void addEcoNewsWithInvalidEmail() throws Exception {
+        String invalidEmailContent =
+                "{\"unsubscribeToken\":\"string\"," +
+                        "\"creationDate\":\"2021-02-05T15:10:22.434Z\"," +
+                        "\"imagePath\":\"string\"," +
+                        "\"source\":\"string\"," +
+                        "\"author\":{\"id\":0,\"name\":\"string\",\"email\":\"invalid-email\"}," +
+                        "\"title\":\"string\"," +
+                        "\"text\":\"string\"}";
+
+        try {
+            mockPerform(invalidEmailContent, "/addEcoNews");
+
+            fail("Expected BadRequestException to be thrown");
+        } catch (Exception e) {
+            assertTrue(e.getCause() instanceof BadRequestException);
+            assertEquals("Invalid email format for author: invalid-email", e.getCause().getMessage());
+        }
+
+        verify(emailService, never()).sendCreatedNewsForAuthor(any(EcoNewsForSendEmailDto.class));
     }
 
     @Test
@@ -112,10 +141,12 @@ class EmailControllerTest {
 
     @Test
     void sendHabitNotification() throws Exception {
-        String content = "{" +
-            "\"email\":\"string\"," +
-            "\"name\":\"string\"" +
-            "}";
+        String content = """
+             {
+              "email": "test@example.com",
+              "name": "string"
+             }
+            """;
 
         mockPerform(content, "/sendHabitNotification");
 
