@@ -4,11 +4,13 @@ import greencity.constant.HttpStatuses;
 import greencity.dto.econews.EcoNewsForSendEmailDto;
 import greencity.dto.notification.NotificationDto;
 import greencity.dto.violation.UserViolationMailDto;
+import greencity.exception.exceptions.BadRequestException;
 import greencity.exception.exceptions.NotFoundException;
 import greencity.message.SendChangePlaceStatusEmailMessage;
 import greencity.message.SendHabitNotification;
 import greencity.message.SendReportEmailMessage;
 import greencity.service.EmailService;
+import greencity.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -19,12 +21,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.regex.Pattern;
+
 @RestController
 @RequestMapping("/email")
 @AllArgsConstructor
 public class EmailController {
     @Autowired
     private final EmailService emailService;
+
+    @Autowired
+    private final UserService userService;
 
     /**
      * Method for sending news for users who subscribed for updates.
@@ -34,6 +41,11 @@ public class EmailController {
      */
     @PostMapping("/addEcoNews")
     public ResponseEntity<Object> addEcoNews(@RequestBody EcoNewsForSendEmailDto message) {
+        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9+_.-]+$";
+        Pattern pattern = Pattern.compile(emailRegex);
+        if (!pattern.matcher(message.getAuthor().getEmail()).matches()) {
+            throw new BadRequestException("Invalid email format for author: " + message.getAuthor().getEmail());
+        }
         emailService.sendCreatedNewsForAuthor(message);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
@@ -60,6 +72,11 @@ public class EmailController {
      */
     @PostMapping("/changePlaceStatus")
     public ResponseEntity<Object> changePlaceStatus(@RequestBody SendChangePlaceStatusEmailMessage message) {
+        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9+_.-]+$";
+        Pattern pattern = Pattern.compile(emailRegex);
+        if (!pattern.matcher(message.getAuthorEmail()).matches()) {
+            throw new BadRequestException("Invalid email format for author; " + message.getAuthorEmail());
+        }
         emailService.sendChangePlaceStatusEmail(message.getAuthorFirstName(), message.getPlaceName(),
             message.getPlaceStatus(), message.getAuthorEmail());
         return ResponseEntity.status(HttpStatus.OK).build();
@@ -74,8 +91,15 @@ public class EmailController {
      */
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @PostMapping("/sendHabitNotification")
-    public ResponseEntity<Object> sendHabitNotification(@RequestBody @Valid SendHabitNotification sendHabitNotification) {
-        emailService.sendHabitNotification(sendHabitNotification.getName(), sendHabitNotification.getEmail());
+    public ResponseEntity<Object> sendHabitNotification(@RequestBody SendHabitNotification sendHabitNotification) {
+        String name = sendHabitNotification.getName();
+        String email = sendHabitNotification.getEmail();
+
+        if(!userService.existsUserByEmail(email)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        emailService.sendHabitNotification(name, email);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 

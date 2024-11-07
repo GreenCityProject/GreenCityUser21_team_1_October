@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import greencity.ModelUtils;
 import greencity.TestConst;
 import greencity.constant.AppConstant;
+import greencity.constant.ErrorMessage;
 import greencity.converters.UserArgumentResolver;
 import greencity.dto.PageableAdvancedDto;
 import greencity.dto.filter.FilterUserDto;
@@ -12,7 +13,7 @@ import greencity.dto.ubs.UbsTableCreationDto;
 import greencity.dto.user.*;
 import greencity.enums.EmailNotification;
 import greencity.enums.Role;
-import greencity.repository.UserRepo;
+import greencity.exception.handler.CustomExceptionHandler;
 import greencity.service.UserService;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,12 +25,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.modelmapper.ModelMapper;
+import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
+import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -57,12 +61,15 @@ class UserControllerTest {
 
     private ObjectMapper objectMapper;
 
+    private final ErrorAttributes errorAttributes = new DefaultErrorAttributes();
+
     @BeforeEach
     void setup() {
         this.mockMvc = MockMvcBuilders
                 .standaloneSetup(userController)
                 .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver(),
                         new UserArgumentResolver(userService, new ModelMapper()))
+                .setControllerAdvice(new CustomExceptionHandler(errorAttributes))
                 .build();
         objectMapper = new ObjectMapper();
     }
@@ -291,13 +298,42 @@ class UserControllerTest {
 
     @Test
     void getUserProfileStatistics() throws Exception {
-        String accessToken = "accessToken";
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(AUTHORIZATION, accessToken);
-        mockMvc.perform(get(userLink + "/{userId}/profileStatistics/", 1)
-                        .headers(headers))
+        Long userId = 1L;
+        String email = "test@mail.com";
+
+        Principal principal = mock(Principal.class);
+
+        UserProfileStatisticsDto mockStatistics = UserProfileStatisticsDto
+                .builder()
+                .amountHabitsInProgress(1L)
+                .amountPublishedNews(1L)
+                .amountHabitsAcquired(1L).build();
+
+        when(principal.getName()).thenReturn("test@mail.com");
+        when(userService.getUserProfileStatistics(userId, email)).thenReturn(mockStatistics);
+
+        mockMvc.perform(get(userLink + "/1/profileStatistics/")
+                        .principal(principal)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.amountHabitsInProgress").value("1"))
+                .andExpect(jsonPath("$.amountHabitsAcquired").value("1"))
+                .andExpect(jsonPath("$.amountPublishedNews").value("1"))
                 .andExpect(status().isOk());
-        verify(userService).getUserProfileStatistics((1L));
+
+        verify(userService).getUserProfileStatistics(userId, email);
+    }
+
+    @Test
+    void getOtherUserProfileStatisticsAndGetAccessDenied() throws Exception {
+        String email = "test@mail.com";
+        Principal principal = mock(Principal.class);
+        when(principal.getName()).thenReturn(email);
+        when(userService.getUserProfileStatistics(1L, email))
+                .thenThrow(new AccessDeniedException(ErrorMessage.USER_DOESNT_HAVE_ACCESS_TO_DATA));
+        mockMvc.perform(get(userLink + "/1/profileStatistics/")
+                        .principal(principal))
+                .andExpect(status().isForbidden());
+        verify(userService, times(1)).getUserProfileStatistics(1L, email);
     }
 
     @Test

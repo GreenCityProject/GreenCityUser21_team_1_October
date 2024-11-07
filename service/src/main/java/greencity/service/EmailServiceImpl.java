@@ -13,7 +13,10 @@ import greencity.dto.user.PlaceAuthorDto;
 import greencity.dto.user.UserActivationDto;
 import greencity.dto.user.UserDeactivationReasonDto;
 import greencity.dto.violation.UserViolationMailDto;
+import greencity.entity.User;
 import greencity.exception.exceptions.NotFoundException;
+import greencity.exception.exceptions.WrongEmailException;
+import greencity.exception.exceptions.WrongIdException;
 import greencity.repository.UserRepo;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -34,6 +37,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Executor;
+import java.util.regex.Pattern;
 
 /**
  * {@inheritDoc}
@@ -76,6 +80,9 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendChangePlaceStatusEmail(String authorName, String placeName,
         String placeStatus, String authorEmail) {
+        if (!userRepo.findByEmail(authorEmail).isPresent()) {
+            throw new NotFoundException("User with email " + authorEmail + " not found");
+        }
         log.info(LogMessage.IN_SEND_CHANGE_PLACE_STATUS_EMAIL, placeName);
         Map<String, Object> model = new HashMap<>();
         model.put(EmailConstants.CLIENT_LINK, clientLink);
@@ -125,18 +132,24 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void sendCreatedNewsForAuthor(EcoNewsForSendEmailDto newDto) {
+        User user = userRepo.findByEmail(newDto.getAuthor().getEmail())
+                .orElseThrow(() -> new NotFoundException(ErrorMessage.USER_NOT_FOUND_BY_EMAIL + newDto.getAuthor().getEmail()));
+        if (!user.getId().equals(newDto.getAuthor().getId())) {
+            throw new NotFoundException(ErrorMessage.USER_NOT_FOUND_BY_ID + newDto.getAuthor().getId());
+        }
+
         Map<String, Object> model = new HashMap<>();
         model.put(EmailConstants.ECO_NEWS_LINK, ecoNewsLink);
         model.put(EmailConstants.NEWS_RESULT, newDto);
         try {
             model.put(EmailConstants.UNSUBSCRIBE_LINK, serverLink + "/newSubscriber/unsubscribe?email="
-                + URLEncoder.encode(newDto.getAuthor().getEmail(), StandardCharsets.UTF_8.toString())
+                + URLEncoder.encode(user.getEmail(), StandardCharsets.UTF_8.toString())
                 + "&unsubscribeToken=" + newDto.getUnsubscribeToken());
         } catch (UnsupportedEncodingException e) {
             log.error(e.getMessage());
         }
         String template = createEmailTemplate(model, EmailConstants.NEWS_RECEIVE_EMAIL_PAGE);
-        sendEmail(newDto.getAuthor().getEmail(), EmailConstants.CREATED_NEWS, template);
+        sendEmail(user.getEmail(), EmailConstants.CREATED_NEWS, template);
     }
 
     /**
@@ -277,6 +290,11 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void sendUserViolationEmail(UserViolationMailDto dto) {
+        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9+_.-]+$";
+        Pattern pattern = Pattern.compile(emailRegex);
+        if (!pattern.matcher(dto.getEmail()).matches()) {
+            throw new NotFoundException("Invalid format for user: " + dto.getEmail());
+        }
         Map<String, Object> model = new HashMap<>();
         model.put(EmailConstants.CLIENT_LINK, clientLink);
         model.put(EmailConstants.USER_NAME, dto.getName());
