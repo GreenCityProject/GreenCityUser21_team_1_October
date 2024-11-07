@@ -185,6 +185,7 @@ public class SecurityConfig {
                                 "/user/get-all-authorities",
                                 "/user/get-positions-authorities",
                                 "/user/get-employee-login-positions",
+                                "/user")
                                 "/user/isOnline/{userId}/")
                         .hasAnyRole(ADMIN, UBS_EMPLOYEE, MODERATOR, EMPLOYEE)
                         .requestMatchers(HttpMethod.PATCH,
