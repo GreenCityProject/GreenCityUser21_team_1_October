@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Executor;
+import java.util.regex.Pattern;
 
 /**
  * {@inheritDoc}
@@ -289,6 +290,11 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void sendUserViolationEmail(UserViolationMailDto dto) {
+        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9+_.-]+$";
+        Pattern pattern = Pattern.compile(emailRegex);
+        if (!pattern.matcher(dto.getEmail()).matches()) {
+            throw new NotFoundException("Invalid format for user: " + dto.getEmail());
+        }
         Map<String, Object> model = new HashMap<>();
         model.put(EmailConstants.CLIENT_LINK, clientLink);
         model.put(EmailConstants.USER_NAME, dto.getName());

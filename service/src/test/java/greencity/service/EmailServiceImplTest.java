@@ -238,6 +238,20 @@ class EmailServiceImplTest {
     }
 
     @Test
+    void sendUserViolationInvalidEmailFormatTest() {
+        UserViolationMailDto invalidDto = new UserViolationMailDto();
+        invalidDto.setEmail("Test1gmail.com");
+        invalidDto.setLanguage("en");
+        invalidDto.setName("Test1");
+        invalidDto.setViolationDescription("124125sfgg");
+        Exception exception = assertThrows(NotFoundException.class, () -> {
+            service.sendUserViolationEmail(invalidDto);
+        });
+        assertEquals("Invalid format for user: Test1gmail.com", exception.getMessage());
+        verify(javaMailSender, never()).createMimeMessage();
+    }
+
+    @Test
     void sendSuccessRestorePasswordByEmailTest() {
         String email = "test@gmail.com";
         String lang = "en";
