@@ -24,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -71,7 +72,7 @@ class EmailControllerTest {
     }
 
     @Test
-    void addEcoNewsWithInvalidEmail() throws Exception {
+    void addEcoNewsWithInvalidEmail() {
         String invalidEmailContent =
                 "{\"unsubscribeToken\":\"string\"," +
                         "\"creationDate\":\"2021-02-05T15:10:22.434Z\"," +
@@ -142,7 +143,7 @@ class EmailControllerTest {
     }
 
     @Test
-    void changePlaceStatusInvalidEmailFormat() throws Exception {
+    void changePlaceStatusInvalidEmailFormat() {
         String invalidEmailContent = "{" +
                 "\"authorEmail\":\"Admin1gmail.com\"," +
                 "\"authorFirstName\":\"Admin\"," +
@@ -153,7 +154,7 @@ class EmailControllerTest {
             mockPerform(invalidEmailContent, "/changePlaceStatus");
             fail("Expected BadRequestException to be thrown");
         } catch (Exception e) {
-            assertTrue(e.getCause() instanceof BadRequestException);
+            assertInstanceOf(BadRequestException.class, e.getCause());
             assertEquals("Invalid email format for author; Admin1gmail.com", e.getCause().getMessage());
         }
         verify(emailService, never()).sendChangePlaceStatusEmail(anyString(), anyString(), anyString(), anyString());
