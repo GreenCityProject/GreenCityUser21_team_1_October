@@ -1,5 +1,7 @@
 package greencity.dto.user;
 
+import greencity.enums.Role;
+import greencity.enums.UserStatus;
 import lombok.*;
 
 @AllArgsConstructor
@@ -9,10 +11,10 @@ import lombok.*;
 @EqualsAndHashCode
 @Builder
 public class UserManagementViewDto {
-    private String id;
+    private Long id;
     private String name;
     private String email;
     private String userCredo;
-    private String role;
-    private String userStatus;
+    private Role role;
+    private UserStatus userStatus;
 }

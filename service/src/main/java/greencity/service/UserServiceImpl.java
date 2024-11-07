@@ -234,12 +234,12 @@ public class UserServiceImpl implements UserService {
      */
     private List<SearchCriteria> buildSearchCriteriaList(UserManagementViewDto userViewDto) {
         List<SearchCriteria> searchCriteriaList = new ArrayList<>();
-        setValueIfNotEmpty(searchCriteriaList, "id", userViewDto.getId());
+        setValueIfNotEmpty(searchCriteriaList, "id", String.valueOf(userViewDto.getId()));
         setValueIfNotEmpty(searchCriteriaList, "name", userViewDto.getName());
         setValueIfNotEmpty(searchCriteriaList, "email", userViewDto.getEmail());
         setValueIfNotEmpty(searchCriteriaList, "userCredo", userViewDto.getUserCredo());
-        setValueIfNotEmpty(searchCriteriaList, "role", userViewDto.getRole());
-        setValueIfNotEmpty(searchCriteriaList, "userStatus", userViewDto.getUserStatus());
+        setValueIfNotEmpty(searchCriteriaList, "role", String.valueOf(userViewDto.getRole()));
+        setValueIfNotEmpty(searchCriteriaList, "userStatus", String.valueOf(userViewDto.getUserStatus()));
         return searchCriteriaList;
     }
 
@@ -247,7 +247,7 @@ public class UserServiceImpl implements UserService {
      * {@inheritDoc}
      */
     private void setValueIfNotEmpty(List<SearchCriteria> searchCriteria, String key, String value) {
-        if (!StringUtils.isEmpty(value)) {
+        if (!StringUtils.hasText(value)) {
             searchCriteria.add(SearchCriteria.builder()
                 .key(key)
                 .type(key)
