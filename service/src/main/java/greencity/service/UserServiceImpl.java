@@ -31,10 +31,12 @@ import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -80,6 +82,11 @@ public class UserServiceImpl implements UserService {
     public UserVO findById(Long id) {
         User user = userRepo.findById(id)
             .orElseThrow(() -> new WrongIdException(ErrorMessage.USER_NOT_FOUND_BY_ID + id));
+        if (user.getLanguage() == null) {
+            Language defaultLanguage = languageRepo.findById(1L)
+                    .orElseThrow(() -> new NotFoundException(ErrorMessage.LANGUAGE_NOT_FOUND_BY_ID + 1L));
+            user.setLanguage(defaultLanguage);
+        }
         return modelMapper.map(user, UserVO.class);
     }
 
@@ -370,11 +377,18 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public UserUpdateDto getUserUpdateDtoByEmail(String email) {
-        return modelMapper.map(
-            userRepo.findByEmail(email)
-                .orElseThrow(() -> new WrongEmailException(ErrorMessage.USER_NOT_FOUND_BY_EMAIL + email)),
-            UserUpdateDto.class);
+        UserVO user = findByEmail(email);
+
+        if (user.getRole() == Role.ROLE_USER) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access is denied");
+        }
+
+        User userEntity = userRepo.findByEmail(email)
+                .orElseThrow(() -> new WrongEmailException(ErrorMessage.USER_NOT_FOUND_BY_EMAIL + email));
+
+        return modelMapper.map(userEntity, UserUpdateDto.class);
     }
+
 
     /**
      * {@inheritDoc}
