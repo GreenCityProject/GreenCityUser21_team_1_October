@@ -29,8 +29,7 @@ import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 class EmailServiceImplTest {
@@ -83,12 +82,59 @@ class EmailServiceImplTest {
 
     @Test
     void sendCreatedNewsForAuthorTest() {
+
         EcoNewsForSendEmailDto dto = new EcoNewsForSendEmailDto();
         PlaceAuthorDto placeAuthorDto = new PlaceAuthorDto();
+        placeAuthorDto.setId(2L);
         placeAuthorDto.setEmail("test@gmail.com");
         dto.setAuthor(placeAuthorDto);
+
+        User user = new User();
+        user.setId(2L);
+        user.setEmail("test@gmail.com");
+
+        when(userRepo.findByEmail("test@gmail.com")).thenReturn(Optional.of(user));
+
+        MimeMessage mimeMessage = mock(MimeMessage.class);
+        when(javaMailSender.createMimeMessage()).thenReturn(mimeMessage);
+
         service.sendCreatedNewsForAuthor(dto);
+
         verify(javaMailSender).createMimeMessage();
+    }
+
+    @Test
+    void sendCreatedNewsForAuthor_whenUserNotFoundByEmail_throwsNotFoundException() {
+
+        EcoNewsForSendEmailDto dto = new EcoNewsForSendEmailDto();
+        PlaceAuthorDto placeAuthorDto = new PlaceAuthorDto();
+        placeAuthorDto.setEmail("nonexistent@gmail.com");
+        dto.setAuthor(placeAuthorDto);
+
+        when(userRepo.findByEmail("nonexistent@gmail.com")).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> service.sendCreatedNewsForAuthor(dto),
+                "Expected NotFoundException when user is not found by email");
+        verify(javaMailSender, never()).createMimeMessage();
+    }
+    @Test
+    void sendCreatedNewsForAuthor_whenUserIdMismatch_throwsNotFoundException() {
+
+        EcoNewsForSendEmailDto dto = new EcoNewsForSendEmailDto();
+        PlaceAuthorDto placeAuthorDto = new PlaceAuthorDto();
+        placeAuthorDto.setId(2L);
+        placeAuthorDto.setEmail("test@gmail.com");
+        dto.setAuthor(placeAuthorDto);
+
+        User user = new User();
+        user.setId(1L);
+        user.setEmail("test@gmail.com");
+
+        when(userRepo.findByEmail("test@gmail.com")).thenReturn(Optional.of(user));
+
+        assertThrows(NotFoundException.class, () -> service.sendCreatedNewsForAuthor(dto),
+                "Expected NotFoundException when user ID does not match");
+        verify(javaMailSender, never()).createMimeMessage();
     }
 
     @Test
