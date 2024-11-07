@@ -101,13 +101,18 @@ public class UserController {
     public ResponseEntity<UserRoleDto> updateRole(
             @PathVariable Long id,
             @NotNull @RequestBody Map<String, String> body,
-            @ApiIgnore Principal principal) {
-        Role role = Role.valueOf(body.get("role"));
-        UserRoleDto userRoleDto = new UserRoleDto(id, role);
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(
-                        userService.updateRole(
-                                userRoleDto.getId(), userRoleDto.getRole(), principal.getName()));
+            @ApiIgnore HttpServletRequest httpServletRequest) {
+        Principal principal = httpServletRequest.getUserPrincipal();
+        if (principal != null) {
+            Role role = Role.valueOf(body.get("role"));
+            UserRoleDto userRoleDto = new UserRoleDto(id, role);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(
+                            userService.updateRole(
+                                    userRoleDto.getId(), userRoleDto.getRole(), principal.getName()));
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
     }
 
     /**
@@ -213,9 +218,14 @@ public class UserController {
             @ApiResponse(responseCode = "403", description = HttpStatuses.FORBIDDEN)
     })
     @GetMapping
-    public ResponseEntity<UserUpdateDto> getUserByPrincipal(@ApiIgnore Principal principal) {
+    public ResponseEntity<UserUpdateDto> getUserByPrincipal(@ApiIgnore HttpServletRequest httpServletRequest) {
+        Principal principal = httpServletRequest.getUserPrincipal();
+        if (principal!=null){
         String email = principal.getName();
-        return ResponseEntity.status(HttpStatus.OK).body(userService.getUserUpdateDtoByEmail(email));
+        return ResponseEntity.status(HttpStatus.OK).body(userService.getUserUpdateDtoByEmail(email));}
+        else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
     }
 
     /**
@@ -296,10 +306,15 @@ public class UserController {
     public ResponseEntity<HttpStatus> updateUserProfilePicture(
             @Parameter(description = "pass image as base64") @RequestPart(required = false) String base64,
             @Parameter(description = "Profile picture") @ImageValidation @RequestPart(required = false) MultipartFile image,
-            @ApiIgnore @AuthenticationPrincipal Principal principal) {
-        String email = principal.getName();
-        userService.updateUserProfilePicture(image, email, base64);
-        return ResponseEntity.status(HttpStatus.OK).build();
+            @ApiIgnore HttpServletRequest httpServletRequest) {
+        Principal principal = httpServletRequest.getUserPrincipal();
+        if (principal != null) {
+            String email = principal.getName();
+            userService.updateUserProfilePicture(image, email, base64);
+            return ResponseEntity.status(HttpStatus.OK).build();
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
     }
 
     /**
@@ -316,10 +331,15 @@ public class UserController {
     })
     @PatchMapping(path = "/deleteProfilePicture")
     public ResponseEntity<HttpStatus> deleteUserProfilePicture(
-            @ApiIgnore @AuthenticationPrincipal Principal principal) {
-        String email = principal.getName();
-        userService.deleteUserProfilePicture(email);
-        return ResponseEntity.status(HttpStatus.OK).build();
+            @ApiIgnore HttpServletRequest httpServletRequest) {
+        Principal principal = httpServletRequest.getUserPrincipal();
+        if (principal != null) {
+            String email = principal.getName();
+            userService.deleteUserProfilePicture(email);
+            return ResponseEntity.status(HttpStatus.OK).build();
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
     }
 
     /**

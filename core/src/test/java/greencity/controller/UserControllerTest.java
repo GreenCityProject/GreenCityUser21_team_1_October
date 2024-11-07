@@ -58,6 +58,7 @@ class UserControllerTest {
     private UserController userController;
     @Mock
     private UserService userService;
+
     private ObjectMapper objectMapper;
 
     private final ErrorAttributes errorAttributes = new DefaultErrorAttributes();
@@ -250,7 +251,6 @@ class UserControllerTest {
         headers.set(AUTHORIZATION, accessToken);
         MockMultipartFile jsonFile = new MockMultipartFile("userProfilePictureDto", "",
                 "application/json", json.getBytes());
-
         when(principal.getName()).thenReturn("testmail@gmail.com");
         when(userService.updateUserProfilePicture(null, "testmail@gmail.com",
                 "test")).thenReturn(user);
