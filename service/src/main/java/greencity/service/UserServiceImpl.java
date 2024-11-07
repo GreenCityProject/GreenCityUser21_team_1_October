@@ -31,6 +31,7 @@ import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -602,7 +603,9 @@ public class UserServiceImpl implements UserService {
      * @author Marian Datsko
      */
     @Override
-    public UserProfileStatisticsDto getUserProfileStatistics(Long userId) {
+    public UserProfileStatisticsDto getUserProfileStatistics(Long userId, String email) {
+        var currentUserID = userRepo.findUserIdByEmail(email);
+        if (currentUserID.isPresent()&&currentUserID.get()==userId){
         Long amountOfPublishedNewsByUserId = restClient.findAmountOfPublishedNews(userId);
         Long amountOfAcquiredHabitsByUserId = restClient.findAmountOfAcquiredHabits(userId);
         Long amountOfHabitsInProgressByUserId = restClient.findAmountOfHabitsInProgress(userId);
@@ -612,6 +615,11 @@ public class UserServiceImpl implements UserService {
             .amountHabitsAcquired(amountOfAcquiredHabitsByUserId)
             .amountHabitsInProgress(amountOfHabitsInProgressByUserId)
             .build();
+        } else {
+            throw new AccessDeniedException(ErrorMessage.USER_DOESNT_HAVE_ACCESS_TO_DATA
+                    +" Requested data of user with id:"+userId);
+        }
+
     }
 
     @Override

@@ -12,7 +12,10 @@ import greencity.dto.filter.FilterUserDto;
 import greencity.dto.shoppinglist.CustomShoppingListItemResponseDto;
 import greencity.dto.ubs.UbsTableCreationDto;
 import greencity.dto.user.*;
-import greencity.entity.*;
+import greencity.entity.Language;
+import greencity.entity.User;
+import greencity.entity.UserDeactivationReason;
+import greencity.entity.VerifyEmail;
 import greencity.enums.EmailNotification;
 import greencity.enums.Role;
 import greencity.exception.exceptions.*;
@@ -42,7 +45,10 @@ import org.springframework.web.server.ResponseStatusException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.Month;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -51,7 +57,6 @@ import static greencity.enums.Role.ROLE_USER;
 import static greencity.enums.UserStatus.ACTIVATED;
 import static greencity.enums.UserStatus.DEACTIVATED;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -501,11 +506,11 @@ class UserServiceImplTest {
                 .thenReturn(TestConst.SIMPLE_LONG_NUMBER);
         when(restClient.findAmountOfHabitsInProgress(TestConst.SIMPLE_LONG_NUMBER))
                 .thenReturn(TestConst.SIMPLE_LONG_NUMBER);
-        userService.getUserProfileStatistics(TestConst.SIMPLE_LONG_NUMBER);
+        userService.getUserProfileStatistics(TestConst.SIMPLE_LONG_NUMBER, TestConst.EMAIL);
         assertEquals(ModelUtils.USER_PROFILE_STATISTICS_DTO,
-                userService.getUserProfileStatistics(TestConst.SIMPLE_LONG_NUMBER));
+                userService.getUserProfileStatistics(TestConst.SIMPLE_LONG_NUMBER, TestConst.EMAIL));
         assertNotEquals(ModelUtils.USER_PROFILE_STATISTICS_DTO,
-                userService.getUserProfileStatistics(TestConst.SIMPLE_LONG_NUMBER_BAD_VALUE));
+                userService.getUserProfileStatistics(TestConst.SIMPLE_LONG_NUMBER_BAD_VALUE, TestConst.EMAIL));
     }
 
     @Test

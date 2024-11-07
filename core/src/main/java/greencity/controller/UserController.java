@@ -22,6 +22,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -31,6 +32,7 @@ import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -394,11 +396,19 @@ public class UserController {
             @ApiResponse(responseCode = "400", description = HttpStatuses.BAD_REQUEST),
             @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
     })
+    @ResponseStatus(HttpStatus.FORBIDDEN)
     @GetMapping("/{userId}/profileStatistics/")
     public ResponseEntity<UserProfileStatisticsDto> getUserProfileStatistics(
-            @Parameter(description = "Id of current user. Cannot be empty.") @PathVariable @CurrentUserId Long userId) {
+            @Parameter(description = "Id of current user. Cannot be empty.") @PathVariable @CurrentUserId Long userId,
+            HttpServletRequest httpServletRequest) {
+        String email = httpServletRequest.getUserPrincipal().getName();
         return ResponseEntity.status(HttpStatus.OK)
-                .body(userService.getUserProfileStatistics(userId));
+            .body(userService.getUserProfileStatistics(userId,email));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<String> handleAccessDeniedException (AccessDeniedException deniedException){
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(deniedException.getMessage());
     }
 
     /**
