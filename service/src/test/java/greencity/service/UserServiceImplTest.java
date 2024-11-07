@@ -38,7 +38,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -173,6 +175,11 @@ class UserServiceImplTest {
 
     @Test
     void updateUserStatusDeactivatedTest() {
+        Language defaultLanguage = new Language();
+        defaultLanguage.setId(1L);
+        defaultLanguage.setCode("ua");
+        when(languageRepo.findById(1L)).thenReturn(Optional.of(defaultLanguage));
+
         when(userRepo.findById(userId2)).thenReturn(Optional.of(user2));
         when(modelMapper.map(user2, UserVO.class)).thenReturn(userVO2);
         when(userRepo.findByEmail(any())).thenReturn(Optional.of(user2));
@@ -189,6 +196,11 @@ class UserServiceImplTest {
 
     @Test
     void updateUserStatusLowRoleLevelException() {
+        Language defaultLanguage = new Language();
+        defaultLanguage.setId(1L);
+        defaultLanguage.setCode("ua");
+        when(languageRepo.findById(1L)).thenReturn(Optional.of(defaultLanguage));
+
         user.setRole(Role.ROLE_MODERATOR);
         userVO.setRole(Role.ROLE_MODERATOR);
         when(userRepo.findByEmail(any())).thenReturn(Optional.of(user2));
@@ -230,9 +242,14 @@ class UserServiceImplTest {
     @Test
     void findByIdTest() {
         Long id = 1L;
+        Language defaultLanguage = new Language();
+        defaultLanguage.setId(1L);
+        defaultLanguage.setCode("ua");
+        when(languageRepo.findById(1L)).thenReturn(Optional.of(defaultLanguage));
 
         User user = new User();
         user.setId(1L);
+        user.setLanguage(defaultLanguage);
 
         when(userRepo.findById(id)).thenReturn(Optional.of(user));
         when(modelMapper.map(user, UserVO.class)).thenReturn(userVO);
@@ -259,6 +276,11 @@ class UserServiceImplTest {
 
     @Test
     void deleteByExistentIdTest() {
+        Language defaultLanguage = new Language();
+        defaultLanguage.setId(1L);
+        defaultLanguage.setCode("ua");
+        when(languageRepo.findById(1L)).thenReturn(Optional.of(defaultLanguage));
+
         when(userRepo.findById(userId)).thenReturn(Optional.of(user));
         when(modelMapper.map(user, UserVO.class)).thenReturn(userVO);
         when(modelMapper.map(userVO, User.class)).thenReturn(user);
@@ -346,6 +368,11 @@ class UserServiceImplTest {
 
     @Test
     void updateLastVisit() {
+        Language defaultLanguage = new Language();
+        defaultLanguage.setId(1L);
+        defaultLanguage.setCode("ua");
+        when(languageRepo.findById(1L)).thenReturn(Optional.of(defaultLanguage));
+
         when(modelMapper.map(userVO, User.class)).thenReturn(user);
         when(userRepo.findById(userId)).thenReturn(Optional.of(user));
         when(modelMapper.map(user, UserVO.class)).thenReturn(userVO);
@@ -381,15 +408,47 @@ class UserServiceImplTest {
     }
 
     @Test
-    void getUserUpdateDtoByEmail() {
-        when(userRepo.findByEmail(anyString())).thenReturn(Optional.of(user));
-        UserUpdateDto userUpdateDto = new UserUpdateDto();
-        userUpdateDto.setName(user.getName());
-        userUpdateDto.setEmailNotification(user.getEmailNotification());
-        when(modelMapper.map(any(), any())).thenReturn(userUpdateDto);
-        UserUpdateDto userInitialsByEmail = userService.getUserUpdateDtoByEmail("");
-        assertEquals(userInitialsByEmail.getName(), user.getName());
-        assertEquals(userInitialsByEmail.getEmailNotification(), user.getEmailNotification());
+    void getUserUpdateDtoByEmail_AdminRole() {
+        String email = "test@example.com";
+
+        UserVO userVO = new UserVO();
+        userVO.setRole(Role.ROLE_ADMIN);
+
+        User userEntity = new User();
+        userEntity.setEmail(email);
+        userEntity.setName("Test User");
+
+        UserUpdateDto expectedDto = new UserUpdateDto();
+        expectedDto.setName("Test User");
+        expectedDto.setEmailNotification(userEntity.getEmailNotification());
+
+        when(userRepo.findByEmail(email)).thenReturn(Optional.of(userEntity));
+        when(userService.findByEmail(email)).thenReturn(userVO);
+
+        ReflectionTestUtils.setField(userService, "modelMapper", new ModelMapper());
+        UserUpdateDto actualDto = userService.getUserUpdateDtoByEmail(email);
+
+        assertEquals(expectedDto.getName(), actualDto.getName());
+        assertEquals(expectedDto.getEmailNotification(), actualDto.getEmailNotification());
+        verify(userRepo, times(3)).findByEmail(email);
+    }
+    @Test
+    void getUserUpdateDtoByEmail_UserRole() {
+        String email = "test@example.com";
+
+        UserVO userVO = new UserVO();
+        userVO.setRole(Role.ROLE_USER);
+
+        when(userRepo.findByEmail(email)).thenReturn(Optional.of(new User()));
+        when(userService.findByEmail(email)).thenReturn(userVO);
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
+            userService.getUserUpdateDtoByEmail(email);
+        });
+
+        assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
+        assertEquals("Access is denied", exception.getReason());
+        verify(userRepo, times(2)).findByEmail(email);
     }
 
     @Test
@@ -713,6 +772,11 @@ class UserServiceImplTest {
 
     @Test
     void findByIdAndToken() {
+        Language defaultLanguage = new Language();
+        defaultLanguage.setId(1L);
+        defaultLanguage.setCode("ua");
+        when(languageRepo.findById(1L)).thenReturn(Optional.of(defaultLanguage));
+
         VerifyEmail verifyEmail = new VerifyEmail();
         verifyEmail.setId(2L);
         verifyEmail.setExpiryDate(LocalDateTime.now());
@@ -730,6 +794,11 @@ class UserServiceImplTest {
 
     @Test
     void findByIdAndToken2() {
+        Language defaultLanguage = new Language();
+        defaultLanguage.setId(1L);
+        defaultLanguage.setCode("ua");
+        when(languageRepo.findById(1L)).thenReturn(Optional.of(defaultLanguage));
+
         when(userRepo.findById(userId2)).thenReturn(Optional.of(user2));
         when(modelMapper.map(Optional.of(user2), UserVO.class)).thenReturn(userVO2);
         when(modelMapper.map(userVO2, User.class)).thenReturn(user2);
