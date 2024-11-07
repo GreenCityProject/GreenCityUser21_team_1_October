@@ -13,7 +13,10 @@ import greencity.dto.user.PlaceAuthorDto;
 import greencity.dto.user.UserActivationDto;
 import greencity.dto.user.UserDeactivationReasonDto;
 import greencity.dto.violation.UserViolationMailDto;
+import greencity.entity.User;
 import greencity.exception.exceptions.NotFoundException;
+import greencity.exception.exceptions.WrongEmailException;
+import greencity.exception.exceptions.WrongIdException;
 import greencity.repository.UserRepo;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -128,18 +131,24 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void sendCreatedNewsForAuthor(EcoNewsForSendEmailDto newDto) {
+        User user = userRepo.findByEmail(newDto.getAuthor().getEmail())
+                .orElseThrow(() -> new NotFoundException(ErrorMessage.USER_NOT_FOUND_BY_EMAIL + newDto.getAuthor().getEmail()));
+        if (!user.getId().equals(newDto.getAuthor().getId())) {
+            throw new NotFoundException(ErrorMessage.USER_NOT_FOUND_BY_ID + newDto.getAuthor().getId());
+        }
+
         Map<String, Object> model = new HashMap<>();
         model.put(EmailConstants.ECO_NEWS_LINK, ecoNewsLink);
         model.put(EmailConstants.NEWS_RESULT, newDto);
         try {
             model.put(EmailConstants.UNSUBSCRIBE_LINK, serverLink + "/newSubscriber/unsubscribe?email="
-                + URLEncoder.encode(newDto.getAuthor().getEmail(), StandardCharsets.UTF_8.toString())
+                + URLEncoder.encode(user.getEmail(), StandardCharsets.UTF_8.toString())
                 + "&unsubscribeToken=" + newDto.getUnsubscribeToken());
         } catch (UnsupportedEncodingException e) {
             log.error(e.getMessage());
         }
         String template = createEmailTemplate(model, EmailConstants.NEWS_RECEIVE_EMAIL_PAGE);
-        sendEmail(newDto.getAuthor().getEmail(), EmailConstants.CREATED_NEWS, template);
+        sendEmail(user.getEmail(), EmailConstants.CREATED_NEWS, template);
     }
 
     /**
