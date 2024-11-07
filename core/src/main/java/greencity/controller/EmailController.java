@@ -68,6 +68,11 @@ public class EmailController {
      */
     @PostMapping("/changePlaceStatus")
     public ResponseEntity<Object> changePlaceStatus(@RequestBody SendChangePlaceStatusEmailMessage message) {
+        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9+_.-]+$";
+        Pattern pattern = Pattern.compile(emailRegex);
+        if (!pattern.matcher(message.getAuthorEmail()).matches()) {
+            throw new BadRequestException("Invalid email format for author; " + message.getAuthorEmail());
+        }
         emailService.sendChangePlaceStatusEmail(message.getAuthorFirstName(), message.getPlaceName(),
             message.getPlaceStatus(), message.getAuthorEmail());
         return ResponseEntity.status(HttpStatus.OK).build();
