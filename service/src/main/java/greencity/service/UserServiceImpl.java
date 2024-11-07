@@ -774,4 +774,9 @@ public class UserServiceImpl implements UserService {
 
         throw new LowRoleLevelException("You do not have authorities");
     }
+
+    @Override
+    public boolean existsUserByEmail(String email) {
+        return userRepo.existsUserByEmail(email);
+    }
 }
