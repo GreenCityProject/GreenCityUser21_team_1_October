@@ -64,8 +64,9 @@ class JwtToolTest {
             .parseSignedClaims(accessToken)
             .getPayload()
             .get(ROLE);
-        assertEquals(expectedRole, Role.valueOf(authorities.getFirst()));
+        assertEquals(expectedRole, Role.valueOf(authorities.get(0)));
     }
+
 
     @Test
     void createRefreshToken() {
@@ -90,7 +91,7 @@ class JwtToolTest {
             .parseSignedClaims(refreshToken)
             .getPayload()
             .get(ROLE);
-        assertEquals(expectedRole, Role.valueOf(authorities.getFirst()));
+        assertEquals(expectedRole, Role.valueOf(authorities.get(0)));
     }
 
     @Test

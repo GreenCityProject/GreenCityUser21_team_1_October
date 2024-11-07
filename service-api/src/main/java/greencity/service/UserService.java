@@ -292,7 +292,7 @@ public interface UserService {
      * @param userId - {@link UserVO}'s id
      * @author Marian Datsko
      */
-    UserProfileStatisticsDto getUserProfileStatistics(Long userId);
+    UserProfileStatisticsDto getUserProfileStatistics(Long userId, String email);
 
     /**
      * Method deactivates all the {@link UserVO} by list of IDs.
@@ -383,4 +383,6 @@ public interface UserService {
      * @author Ihor Volianskyi
      */
     UserVO findAdminById(Long id);
+
+    boolean existsUserByEmail(String email);
 }
