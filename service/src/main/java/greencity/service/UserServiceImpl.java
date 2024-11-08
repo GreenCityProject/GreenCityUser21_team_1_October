@@ -247,7 +247,7 @@ public class UserServiceImpl implements UserService {
      * {@inheritDoc}
      */
     private void setValueIfNotEmpty(List<SearchCriteria> searchCriteria, String key, String value) {
-        if (!StringUtils.hasText(value)) {
+        if (!StringUtils.isEmpty(value)) {
             searchCriteria.add(SearchCriteria.builder()
                 .key(key)
                 .type(key)
