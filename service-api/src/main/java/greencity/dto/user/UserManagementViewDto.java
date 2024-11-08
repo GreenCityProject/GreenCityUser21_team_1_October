@@ -11,10 +11,10 @@ import lombok.*;
 @EqualsAndHashCode
 @Builder
 public class UserManagementViewDto {
-    private Long id;
+    private String id;
     private String name;
     private String email;
     private String userCredo;
-    private Role role;
-    private UserStatus userStatus;
+    private String role;
+    private String userStatus;
 }
