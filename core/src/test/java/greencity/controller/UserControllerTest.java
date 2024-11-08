@@ -541,6 +541,12 @@ class UserControllerTest {
     }
 
     @Test
+    void getUserLang_Unauthorized() throws Exception {
+        this.mockMvc.perform(get(userLink + "/lang"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void getReasonsOfDeactivation() throws Exception {
         List<String> test = List.of("test", "test");
         when(userService.getDeactivationReason(1L, "en")).thenReturn(test);
