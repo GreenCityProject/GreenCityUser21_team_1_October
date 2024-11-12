@@ -37,6 +37,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import springfox.documentation.annotations.ApiIgnore;
 
 import java.security.Principal;
@@ -783,6 +784,10 @@ public class UserController {
     public ResponseEntity<PageableAdvancedDto<UserManagementVO>> search(@ApiIgnore Pageable pageable,
                                                                         @RequestBody UserManagementViewDto userViewDto) {
         PageableAdvancedDto<UserManagementVO> found = userService.search(pageable, userViewDto);
+
+        if (found.getPage().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No users found for the specified criteria.");
+        }
         return ResponseEntity.status(HttpStatus.OK).body(found);
     }
 
