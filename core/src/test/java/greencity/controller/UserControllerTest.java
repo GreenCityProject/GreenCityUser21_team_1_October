@@ -393,6 +393,32 @@ class UserControllerTest {
     }
 
     @Test
+    void searchBadRequestTest() throws Exception {
+        Pageable pageable = PageRequest.of(0, 20);
+        UserManagementViewDto userViewDto = UserManagementViewDto.builder()
+                .id("999")
+                .name("nonexistent")
+                .email("nonexistent@ukr.net")
+                .build();
+
+        String content = objectMapper.writeValueAsString(userViewDto);
+
+        PageableAdvancedDto<UserManagementVO> emptyResult =
+                new PageableAdvancedDto<>(Collections.emptyList(), 0, 0, 0, 0,
+                        false, false, true, true);
+        when(userService.search(pageable, userViewDto)).thenReturn(emptyResult);
+
+        mockMvc.perform(post(userLink + "/search")
+                        .content(content)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> Matchers.equalTo("No users found for the specified criteria.")
+                        .matches(result.getResolvedException().getMessage()));
+
+        verify(userService).search(pageable, userViewDto);
+    }
+
+    @Test
     void findByEmailTest() throws Exception {
         UserVO userVO = ModelUtils.getUserVO();
         when(userService.findByEmail(TestConst.EMAIL)).thenReturn(userVO);
