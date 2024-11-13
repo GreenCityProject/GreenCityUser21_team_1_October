@@ -601,6 +601,24 @@ class UserControllerTest {
     }
 
     @Test
+    void saveUserConflictTest() throws Exception {
+        UserVO existingUser = ModelUtils.getUserVO();
+        existingUser.setId(1L);
+
+        when(userService.save(existingUser)).thenThrow(new ResponseStatusException(HttpStatus.CONFLICT,
+                "User with id " + existingUser.getId() + " already exists."));
+
+        mockMvc.perform(post(userLink)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(existingUser)))
+                .andExpect(status().isConflict())
+                .andExpect(result -> Matchers.equalTo("User with id " + existingUser.getId() + " already exists.")
+                        .matches(result.getResolvedException().getMessage()));
+
+        verify(userService).save(existingUser);
+    }
+
+    @Test
     void findAllByEmailNotificationTest() throws Exception {
         EmailNotification notification = EmailNotification.DAILY;
         when(userService.findAllByEmailNotification(notification))

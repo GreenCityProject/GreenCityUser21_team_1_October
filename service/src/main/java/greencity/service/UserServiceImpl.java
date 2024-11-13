@@ -72,6 +72,9 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public UserVO save(UserVO userVO) {
+        if (userVO.getId() != null && userRepo.existsById(userVO.getId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "User with id " + userVO.getId() + " already exists.");
+        }
         User user = modelMapper.map(userVO, User.class);
         return modelMapper.map(userRepo.save(user), UserVO.class);
     }
