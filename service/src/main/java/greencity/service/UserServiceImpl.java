@@ -189,6 +189,10 @@ public class UserServiceImpl implements UserService {
     public PageableAdvancedDto<UserManagementVO> search(Pageable pageable,
         UserManagementViewDto userManagementViewDto) {
         Page<User> found = userRepo.findAll(buildSpecification(userManagementViewDto), pageable);
+
+        if (found.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No users found for the specified criteria.");
+        }
         return buildPageableAdvanceDtoFromPage(found);
     }
 

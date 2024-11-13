@@ -784,10 +784,6 @@ public class UserController {
     public ResponseEntity<PageableAdvancedDto<UserManagementVO>> search(@ApiIgnore Pageable pageable,
                                                                         @RequestBody UserManagementViewDto userViewDto) {
         PageableAdvancedDto<UserManagementVO> found = userService.search(pageable, userViewDto);
-
-        if (found.getPage().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No users found for the specified criteria.");
-        }
         return ResponseEntity.status(HttpStatus.OK).body(found);
     }
 

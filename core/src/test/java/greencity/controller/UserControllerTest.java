@@ -31,6 +31,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.access.AccessDeniedException;
@@ -39,6 +40,7 @@ import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequ
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 import java.util.Collections;
@@ -403,10 +405,8 @@ class UserControllerTest {
 
         String content = objectMapper.writeValueAsString(userViewDto);
 
-        PageableAdvancedDto<UserManagementVO> emptyResult =
-                new PageableAdvancedDto<>(Collections.emptyList(), 0, 0, 0, 0,
-                        false, false, true, true);
-        when(userService.search(pageable, userViewDto)).thenReturn(emptyResult);
+        when(userService.search(pageable, userViewDto))
+                .thenThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "No users found for the specified criteria."));
 
         mockMvc.perform(post(userLink + "/search")
                         .content(content)
