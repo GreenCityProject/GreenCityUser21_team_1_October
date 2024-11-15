@@ -31,6 +31,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.access.AccessDeniedException;
@@ -39,6 +40,7 @@ import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequ
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 import java.util.Collections;
@@ -393,6 +395,30 @@ class UserControllerTest {
     }
 
     @Test
+    void searchBadRequestTest() throws Exception {
+        Pageable pageable = PageRequest.of(0, 20);
+        UserManagementViewDto userViewDto = UserManagementViewDto.builder()
+                .id("999")
+                .name("nonexistent")
+                .email("nonexistent@ukr.net")
+                .build();
+
+        String content = objectMapper.writeValueAsString(userViewDto);
+
+        when(userService.search(pageable, userViewDto))
+                .thenThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "No users found for the specified criteria."));
+
+        mockMvc.perform(post(userLink + "/search")
+                        .content(content)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> Matchers.equalTo("No users found for the specified criteria.")
+                        .matches(result.getResolvedException().getMessage()));
+
+        verify(userService).search(pageable, userViewDto);
+    }
+
+    @Test
     void findByEmailTest() throws Exception {
         UserVO userVO = ModelUtils.getUserVO();
         when(userService.findByEmail(TestConst.EMAIL)).thenReturn(userVO);
@@ -578,6 +604,24 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.name").value(TestConst.NAME))
                 .andExpect(jsonPath("$.email").value(TestConst.EMAIL));
+    }
+
+    @Test
+    void saveUserConflictTest() throws Exception {
+        UserVO existingUser = ModelUtils.getUserVO();
+        existingUser.setId(1L);
+
+        when(userService.save(existingUser)).thenThrow(new ResponseStatusException(HttpStatus.CONFLICT,
+                "User with id " + existingUser.getId() + " already exists."));
+
+        mockMvc.perform(post(userLink)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(existingUser)))
+                .andExpect(status().isConflict())
+                .andExpect(result -> Matchers.equalTo("User with id " + existingUser.getId() + " already exists.")
+                        .matches(result.getResolvedException().getMessage()));
+
+        verify(userService).save(existingUser);
     }
 
     @Test

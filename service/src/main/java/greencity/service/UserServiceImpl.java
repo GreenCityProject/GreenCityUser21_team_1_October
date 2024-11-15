@@ -72,6 +72,9 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public UserVO save(UserVO userVO) {
+        if (userVO.getId() != null && userRepo.existsById(userVO.getId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "User with id " + userVO.getId() + " already exists.");
+        }
         User user = modelMapper.map(userVO, User.class);
         return modelMapper.map(userRepo.save(user), UserVO.class);
     }
@@ -189,6 +192,10 @@ public class UserServiceImpl implements UserService {
     public PageableAdvancedDto<UserManagementVO> search(Pageable pageable,
         UserManagementViewDto userManagementViewDto) {
         Page<User> found = userRepo.findAll(buildSpecification(userManagementViewDto), pageable);
+
+        if (found.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No users found for the specified criteria.");
+        }
         return buildPageableAdvanceDtoFromPage(found);
     }
 

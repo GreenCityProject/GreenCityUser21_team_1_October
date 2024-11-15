@@ -763,6 +763,7 @@ public class UserController {
             @ApiResponse(responseCode = "400", description = HttpStatuses.BAD_REQUEST),
             @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
             @ApiResponse(responseCode = "403", description = HttpStatuses.FORBIDDEN),
+            @ApiResponse(responseCode = "409", description = "Conflict: User already exists or violates constraints")
     })
     @PostMapping()
     public ResponseEntity<UserVO> saveUser(@RequestBody @CurrentUser UserVO userVO) {
@@ -770,7 +771,7 @@ public class UserController {
     }
 
     /**
-     * Method that allow to search users by several summarys.
+     * Method that allow to search users by several summaries.
      *
      * @param pageable    {@link Pageable}
      * @param userViewDto {@link UserManagementViewDto} - stores values.
