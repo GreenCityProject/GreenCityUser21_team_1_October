@@ -15,7 +15,6 @@ public final class AppConstant {
     public static final String DEFAULT_LANGUAGE_CODE = "en";
     public static final String PASSWORD = "password";
     public static final String USER_STATUS = "user_status";
-
     private AppConstant() {
     }
 }
