@@ -67,7 +67,7 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
         }
     }
 
-    private SuccessSignInDto authenticateByGoogleAccessToken(String googleAccessToken, String language) {
+    public SuccessSignInDto authenticateByGoogleAccessToken(String googleAccessToken, String language) {
         try {
             UserInfoDto userInfoDto = retrieveGoogleUserInfo(googleAccessToken);
             if (userInfoDto.getEmail() == null) {
@@ -82,8 +82,8 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
         }
     }
 
-    private SuccessSignInDto processAuthentication(String email, String userName, String profilePicture,
-                                                   String language) {
+    public SuccessSignInDto processAuthentication(String email, String userName, String profilePicture,
+                                                  String language) {
         UserVO userVO = userService.findByEmail(email);
         if (userVO == null) {
             log.error(ErrorMessage.USER_NOT_FOUND_BY_EMAIL + "{}", email);

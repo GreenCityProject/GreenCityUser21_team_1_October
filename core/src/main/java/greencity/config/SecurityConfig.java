@@ -119,7 +119,7 @@ public class SecurityConfig {
                                 "/ownSecurity/verifyEmail",
                                 "/ownSecurity/updateAccessToken",
                                 "/ownSecurity/restorePassword",
-                                "/googleSecurity",
+                                "/googleAuth/getToken",
                                 "/facebookSecurity/generateFacebookAuthorizeURL",
                                 "/facebookSecurity/facebook",
                                 "/user/activatedUsersAmount",
