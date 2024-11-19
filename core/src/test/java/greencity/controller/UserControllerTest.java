@@ -13,14 +13,28 @@ import greencity.dto.ubs.UbsTableCreationDto;
 import greencity.dto.user.*;
 import greencity.enums.EmailNotification;
 import greencity.enums.Role;
+import greencity.exception.exceptions.PasswordsDoNotMatchesException;
+import greencity.exception.exceptions.WrongPasswordException;
 import greencity.exception.handler.CustomExceptionHandler;
+import greencity.repository.UserRepo;
+import greencity.security.dto.ownsecurity.ChangePasswordDto;
+import greencity.security.service.OwnSecurityService;
 import greencity.service.UserService;
+
+import java.security.Principal;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -40,14 +54,19 @@ import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequ
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.web.server.ResponseStatusException;
-
 import java.security.Principal;
 import java.util.Collections;
 import java.util.List;
-
 import static greencity.constant.AppConstant.AUTHORIZATION;
-import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -60,20 +79,27 @@ class UserControllerTest {
     private UserController userController;
     @Mock
     private UserService userService;
-
+    @Mock
+    private UserRepo userRepo;
+    @Mock
+    private OwnSecurityService ownSecurityService;
+    @Mock
+    private CustomExceptionHandler customExceptionHandler;
+    private Principal mockPrincipal;
     private ObjectMapper objectMapper;
-
     private final ErrorAttributes errorAttributes = new DefaultErrorAttributes();
 
     @BeforeEach
     void setup() {
         this.mockMvc = MockMvcBuilders
                 .standaloneSetup(userController)
+                .setControllerAdvice(new CustomExceptionHandler())
                 .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver(),
                         new UserArgumentResolver(userService, new ModelMapper()))
-                .setControllerAdvice(new CustomExceptionHandler(errorAttributes))
                 .build();
         objectMapper = new ObjectMapper();
+        mockPrincipal = mock(Principal.class);
+        when(mockPrincipal.getName()).thenReturn("test@example.com");
     }
 
     @Test
@@ -654,5 +680,82 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(3))
                 .andExpect(jsonPath("$", Matchers.containsInAnyOrder("Lviv", "Kyiv", "Kharkiv")));
+    }
+
+    @Test
+    public void testChangePasswordSuccess() throws Exception {
+        ChangePasswordDto changePasswordDto = new ChangePasswordDto();
+        changePasswordDto.setCurrentPassword("oldPassword");
+        changePasswordDto.setNewPassword("NewPassword1!");
+        changePasswordDto.setConfirmPassword("NewPassword1!");
+
+        UserVO mockUser = new UserVO();
+        mockUser.setId(1L);
+        mockUser.setEmail("test@example.com");
+        when(userService.findByEmail("test@example.com")).thenReturn(mockUser);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/user/changePassword")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .principal(mockPrincipal)
+                        .content(objectMapper.writeValueAsString(changePasswordDto)))
+                .andExpect(status().isOk());
+        verify(ownSecurityService, times(1)).changePassword(
+                1L, "oldPassword", "NewPassword1!", "NewPassword1!");
+    }
+
+    @Test
+    public void testChangePasswordMismatchConfirmPassword() throws Exception {
+        ChangePasswordDto changePasswordDto = new ChangePasswordDto();
+        changePasswordDto.setCurrentPassword("oldPassword");
+        changePasswordDto.setNewPassword("NewPassword1!");
+        changePasswordDto.setConfirmPassword("DifferentPassword");
+
+        UserVO mockUser = new UserVO();
+        mockUser.setId(1L);
+        mockUser.setEmail("test@example.com");
+        when(userService.findByEmail("test@example.com")).thenReturn(mockUser);
+
+        doThrow(new PasswordsDoNotMatchesException("New password and confirm password do not match"))
+                .when(ownSecurityService).changePassword(
+                        1L, "oldPassword", "NewPassword1!", "DifferentPassword");
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/user/changePassword")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .principal(mockPrincipal)
+                        .content(objectMapper.writeValueAsString(changePasswordDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.name").value("password"))
+                .andExpect(jsonPath("$.message").value("New password and confirm password do not match"));
+
+        verify(ownSecurityService, times(1)).changePassword(
+                1L, "oldPassword", "NewPassword1!", "DifferentPassword");
+    }
+
+    @Test
+    public void testChangePasswordInvalidCurrentPassword() throws Exception {
+        ChangePasswordDto changePasswordDto = new ChangePasswordDto();
+        changePasswordDto.setCurrentPassword("wrongPassword");
+        changePasswordDto.setNewPassword("NewPassword1!");
+        changePasswordDto.setConfirmPassword("NewPassword1!");
+
+        UserVO mockUser = new UserVO();
+        mockUser.setId(1L);
+        mockUser.setEmail("test@example.com");
+        when(userService.findByEmail("test@example.com")).thenReturn(mockUser);
+
+        doThrow(new WrongPasswordException("Current password is incorrect"))
+                .when(ownSecurityService).changePassword(
+                        1L, "wrongPassword", "NewPassword1!", "NewPassword1!");
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/user/changePassword")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .principal(mockPrincipal)
+                        .content(objectMapper.writeValueAsString(changePasswordDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.name").value("password"))
+                .andExpect(jsonPath("$.message").value("Current password is incorrect"));
+
+        verify(ownSecurityService, times(1)).changePassword(
+                1L, "wrongPassword", "NewPassword1!", "NewPassword1!");
     }
 }

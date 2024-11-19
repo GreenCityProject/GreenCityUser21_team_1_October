@@ -14,6 +14,8 @@ import greencity.dto.user.*;
 import greencity.enums.EmailNotification;
 import greencity.enums.Role;
 import greencity.enums.UserStatus;
+import greencity.security.dto.ownsecurity.ChangePasswordDto;
+import greencity.security.service.OwnSecurityService;
 import greencity.service.EmailService;
 import greencity.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -52,6 +54,7 @@ import java.util.Map;
 public class UserController {
     private final UserService userService;
     private final EmailService emailService;
+    private final OwnSecurityService ownSecurityService;
 
     /**
      * The method which update user status. Parameter principal are ignored because
@@ -838,4 +841,25 @@ public class UserController {
     public ResponseEntity<List<String>> findAllUsersCities() {
         return ResponseEntity.status(HttpStatus.OK).body(userService.findAllUsersCities());
     }
+
+    @Operation(summary = "Change user's password", description = "Allows authenticated users to change their password.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = HttpStatuses.OK),
+            @ApiResponse(responseCode = "400", description = HttpStatuses.BAD_REQUEST),
+            @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
+            @ApiResponse(responseCode = "404", description = HttpStatuses.NOT_FOUND)
+    })
+    @PostMapping("/changePassword")
+    public ResponseEntity<Void> changePassword(@RequestBody @Valid ChangePasswordDto changePasswordDto, @ApiIgnore Principal principal) {
+        UserVO user = userService.findByEmail(principal.getName());
+        Long userId = user.getId();
+        ownSecurityService.changePassword(
+                userId,
+                changePasswordDto.getCurrentPassword(),
+                changePasswordDto.getNewPassword(),
+                changePasswordDto.getConfirmPassword()
+        );
+        return ResponseEntity.ok().build();
+    }
+
 }

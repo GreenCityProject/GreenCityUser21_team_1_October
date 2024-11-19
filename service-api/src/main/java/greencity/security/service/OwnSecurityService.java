@@ -88,4 +88,14 @@ public interface OwnSecurityService {
      * @param email {@link String} email of user.
      */
     void setPassword(SetPasswordDto dto, String email);
+
+    /**
+     * Changes the password for the specified user.
+     *
+     * @param userId          the ID of the user who is changing their password
+     * @param currentPassword the user's current password, required for verification
+     * @param newPassword     the new password that the user wants to set
+     * @param confirmPassword the confirmation of the new password, must match newPassword
+     */
+    void changePassword(Long userId, String currentPassword, String newPassword, String confirmPassword);
 }
