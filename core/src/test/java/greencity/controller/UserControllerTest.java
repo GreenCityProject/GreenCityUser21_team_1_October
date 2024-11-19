@@ -3,22 +3,14 @@ package greencity.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import greencity.ModelUtils;
 import greencity.TestConst;
-
-import static greencity.constant.AppConstant.AUTHORIZATION;
-
 import greencity.constant.AppConstant;
+import greencity.constant.ErrorMessage;
 import greencity.converters.UserArgumentResolver;
 import greencity.dto.PageableAdvancedDto;
 import greencity.dto.filter.FilterUserDto;
 import greencity.dto.language.LanguageVO;
 import greencity.dto.ubs.UbsTableCreationDto;
-import greencity.dto.user.UserManagementUpdateDto;
-import greencity.dto.user.UserManagementVO;
-import greencity.dto.user.UserManagementViewDto;
-import greencity.dto.user.UserProfileDtoRequest;
-import greencity.dto.user.UserStatusDto;
-import greencity.dto.user.UserUpdateDto;
-import greencity.dto.user.UserVO;
+import greencity.dto.user.*;
 import greencity.enums.EmailNotification;
 import greencity.enums.Role;
 import greencity.exception.exceptions.PasswordsDoNotMatchesException;
@@ -35,33 +27,33 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
-
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.modelmapper.ModelMapper;
+import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
+import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -70,6 +62,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.web.server.ResponseStatusException;
+import java.security.Principal;
+import java.util.Collections;
+import java.util.List;
+import static greencity.constant.AppConstant.AUTHORIZATION;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -88,6 +87,7 @@ class UserControllerTest {
     private CustomExceptionHandler customExceptionHandler;
     private Principal mockPrincipal;
     private ObjectMapper objectMapper;
+    private final ErrorAttributes errorAttributes = new DefaultErrorAttributes();
 
     @BeforeEach
     void setup() {
@@ -279,7 +279,6 @@ class UserControllerTest {
         headers.set(AUTHORIZATION, accessToken);
         MockMultipartFile jsonFile = new MockMultipartFile("userProfilePictureDto", "",
                 "application/json", json.getBytes());
-
         when(principal.getName()).thenReturn("testmail@gmail.com");
         when(userService.updateUserProfilePicture(null, "testmail@gmail.com",
                 "test")).thenReturn(user);
@@ -327,13 +326,42 @@ class UserControllerTest {
 
     @Test
     void getUserProfileStatistics() throws Exception {
-        String accessToken = "accessToken";
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(AUTHORIZATION, accessToken);
-        mockMvc.perform(get(userLink + "/{userId}/profileStatistics/", 1)
-                        .headers(headers))
+        Long userId = 1L;
+        String email = "test@mail.com";
+
+        Principal principal = mock(Principal.class);
+
+        UserProfileStatisticsDto mockStatistics = UserProfileStatisticsDto
+                .builder()
+                .amountHabitsInProgress(1L)
+                .amountPublishedNews(1L)
+                .amountHabitsAcquired(1L).build();
+
+        when(principal.getName()).thenReturn("test@mail.com");
+        when(userService.getUserProfileStatistics(userId, email)).thenReturn(mockStatistics);
+
+        mockMvc.perform(get(userLink + "/1/profileStatistics/")
+                        .principal(principal)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.amountHabitsInProgress").value("1"))
+                .andExpect(jsonPath("$.amountHabitsAcquired").value("1"))
+                .andExpect(jsonPath("$.amountPublishedNews").value("1"))
                 .andExpect(status().isOk());
-        verify(userService).getUserProfileStatistics((1L));
+
+        verify(userService).getUserProfileStatistics(userId, email);
+    }
+
+    @Test
+    void getOtherUserProfileStatisticsAndGetAccessDenied() throws Exception {
+        String email = "test@mail.com";
+        Principal principal = mock(Principal.class);
+        when(principal.getName()).thenReturn(email);
+        when(userService.getUserProfileStatistics(1L, email))
+                .thenThrow(new AccessDeniedException(ErrorMessage.USER_DOESNT_HAVE_ACCESS_TO_DATA));
+        mockMvc.perform(get(userLink + "/1/profileStatistics/")
+                        .principal(principal))
+                .andExpect(status().isForbidden());
+        verify(userService, times(1)).getUserProfileStatistics(1L, email);
     }
 
     @Test
@@ -389,6 +417,30 @@ class UserControllerTest {
                         .content(content)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
+        verify(userService).search(pageable, userViewDto);
+    }
+
+    @Test
+    void searchBadRequestTest() throws Exception {
+        Pageable pageable = PageRequest.of(0, 20);
+        UserManagementViewDto userViewDto = UserManagementViewDto.builder()
+                .id("999")
+                .name("nonexistent")
+                .email("nonexistent@ukr.net")
+                .build();
+
+        String content = objectMapper.writeValueAsString(userViewDto);
+
+        when(userService.search(pageable, userViewDto))
+                .thenThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "No users found for the specified criteria."));
+
+        mockMvc.perform(post(userLink + "/search")
+                        .content(content)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> Matchers.equalTo("No users found for the specified criteria.")
+                        .matches(result.getResolvedException().getMessage()));
+
         verify(userService).search(pageable, userViewDto);
     }
 
@@ -541,6 +593,12 @@ class UserControllerTest {
     }
 
     @Test
+    void getUserLang_Unauthorized() throws Exception {
+        this.mockMvc.perform(get(userLink + "/lang"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void getReasonsOfDeactivation() throws Exception {
         List<String> test = List.of("test", "test");
         when(userService.getDeactivationReason(1L, "en")).thenReturn(test);
@@ -572,6 +630,24 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.name").value(TestConst.NAME))
                 .andExpect(jsonPath("$.email").value(TestConst.EMAIL));
+    }
+
+    @Test
+    void saveUserConflictTest() throws Exception {
+        UserVO existingUser = ModelUtils.getUserVO();
+        existingUser.setId(1L);
+
+        when(userService.save(existingUser)).thenThrow(new ResponseStatusException(HttpStatus.CONFLICT,
+                "User with id " + existingUser.getId() + " already exists."));
+
+        mockMvc.perform(post(userLink)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(existingUser)))
+                .andExpect(status().isConflict())
+                .andExpect(result -> Matchers.equalTo("User with id " + existingUser.getId() + " already exists.")
+                        .matches(result.getResolvedException().getMessage()));
+
+        verify(userService).save(existingUser);
     }
 
     @Test

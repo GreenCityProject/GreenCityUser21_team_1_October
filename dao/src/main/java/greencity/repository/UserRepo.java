@@ -34,6 +34,8 @@ public interface UserRepo extends JpaRepository<User, Long>, JpaSpecificationExe
      */
     Optional<User> findByEmail(String email);
 
+    @Query("select u.id from User u where u.email like %?1")
+    Optional<Long> findUserIdByEmail (String email);
     /**
      * Find {@link User} by page.
      *
@@ -138,7 +140,7 @@ public interface UserRepo extends JpaRepository<User, Long>, JpaSpecificationExe
      * @author Vasyl Zhovnir
      **/
     @Modifying
-    @Query(nativeQuery = true, value = "DELETE FROM users where status = 1 "
+    @Query(nativeQuery = true, value = "DELETE FROM users where user_status = 1 "
         + "AND last_activity_time + interval '2 year' <= CURRENT_TIMESTAMP")
     int scheduleDeleteDeactivatedUsers();
 
