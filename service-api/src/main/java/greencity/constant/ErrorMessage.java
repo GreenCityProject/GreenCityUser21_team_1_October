@@ -30,10 +30,9 @@ public final class ErrorMessage {
     public static final String USER_BLOCKED = "User is blocked";
     public static final String USER_CREATED = "User is not activated";
     public static final String USER_EMAIL_IS_NOT_VERIFIED = "The user's email address has not been verified.";
-
     public static final String USER_DOESNT_HAVE_ACCESS_TO_DATA = "User doesn't have acces to this data.";
-
-    public static final String INCORRECT_PASSWORD = "Incorrect password";
+    public static final String INVALID_GOOGLE_TOKEN = "Invalid Google token. ";
+    public static final String EXPIRED_GOOGLE_TOKEN = "Google id token is not valid or expired. ";
 
     private ErrorMessage() {
     }

@@ -7,6 +7,8 @@ import greencity.security.filters.AccessTokenAuthenticationFilter;
 import greencity.security.jwt.JwtTool;
 import greencity.security.providers.JwtAuthenticationProvider;
 import greencity.service.UserService;
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -117,7 +119,7 @@ public class SecurityConfig {
                                 "/ownSecurity/verifyEmail",
                                 "/ownSecurity/updateAccessToken",
                                 "/ownSecurity/restorePassword",
-                                "/googleSecurity",
+                                "/googleAuth/getToken",
                                 "/facebookSecurity/generateFacebookAuthorizeURL",
                                 "/facebookSecurity/facebook",
                                 "/user/activatedUsersAmount",
@@ -257,5 +259,10 @@ public class SecurityConfig {
     public GoogleIdTokenVerifier googleIdTokenVerifier() {
         return new GoogleIdTokenVerifier.Builder(new NetHttpTransport(),
                 GsonFactory.getDefaultInstance()).build();
+    }
+
+    @Bean
+    public HttpClient googleAccessTokenVerifier() {
+        return HttpClients.createDefault();
     }
 }
