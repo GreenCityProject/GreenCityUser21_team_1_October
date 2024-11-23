@@ -1,5 +1,6 @@
 package greencity.controller;
 
+import greencity.security.service.OwnSecurityService;
 import greencity.service.EmailService;
 import greencity.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,13 +25,15 @@ class UserControllerTestBug283 {
     private EmailService mockEmailService;
     private RequestPostProcessor adminCredentials;
     private RequestPostProcessor userCredentials;
+    private OwnSecurityService securityService;
 
     @BeforeEach
     void setUp() {
         AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
         mockUserService = Mockito.mock(UserService.class);
         mockEmailService = Mockito.mock(EmailService.class);
-        UserController userController = new UserController(mockUserService, mockEmailService);
+        securityService = Mockito.mock(OwnSecurityService.class);
+        UserController userController = new UserController(mockUserService, mockEmailService, securityService);
         context.register(UserControllerTestSecurityContext.class);
         context.refresh();
         SecurityFilterChain securityFilterChain = context.getBean(SecurityFilterChain.class);
